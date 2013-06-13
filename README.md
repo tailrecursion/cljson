@@ -1,7 +1,9 @@
 # cljson
 
-Cljson makes it possible to serialize Clojure data as JSON. It supports all the
-data types that ClojureScript supports. No support for tagged literals yet.
+Use cljson to send edn-compatible data between Clojure and ClojureScript applications
+using JSON as the data transfer format. The cljson library has implementations for
+Clojure and ClojureScript and supports all the data types that ClojureScript supports.
+No support for tagged literals yet.
 
 ## Install
 
