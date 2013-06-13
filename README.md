@@ -34,8 +34,10 @@ They convert Clojure data to and from JSON strings.
 ```clojure
 tailrecursion.cljson=> (clj->cljson [1 2 3])
 "[1,[1,2,3]]"
+
 tailrecursion.cljson=> (clj->cljson {[1 2 3] :foo 'bar #{"bar"}})
 "[2,[[[1,[1,2,3]],\"\\ufdd0'foo\"],[\"\\ufdd1'bar\",[3,[\"bar\"]]]]]"
+
 tailrecursion.cljson=> (cljson->clj "[2,[[[1,[1,2,3]],\"\\ufdd0'foo\"],[\"\\ufdd1'bar\",[3,[\"bar\"]]]]]")
 {[1 2 3] :foo, bar #{"bar"}}
 ```
