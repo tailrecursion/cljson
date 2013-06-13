@@ -10,7 +10,6 @@
           (symbol?  x)  (format "\ufdd1'%s" (str x))
           :else         x)))
 
-
 (defn decode [x]
   (let [ctor #(nth [() [] {} #{}] (first %)) 
         m?   #(and (vector? %) (= 2 (first %)))
