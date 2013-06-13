@@ -8,13 +8,11 @@ JSON for the transport format. This should be fast to parse and write in the bro
 Artifacts are published on [Clojars](http://clojars.org/tailrecursion/cljson).
 
 Leiningen:
-
 ```clojure
 [tailrecursion/cljson "0.1.0-SNAPSHOT"]
 ```
 
 Maven:
-
 ```xml
 <dependency>
   <groupId>tailrecursion</groupId>
