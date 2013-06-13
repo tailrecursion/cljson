@@ -4,7 +4,8 @@
 
 (defn encode [x]
   (let [type-id #(cond (seq? %) 0 (vector? %) 1 (map? %) 2 (set? %) 3)]
-    (cond (coll?    x)  [(type-id x) (mapv encode x)]
+    (cond (map?     x)  [(type-id x) (mapv (partial mapv encode) x)]
+          (coll?    x)  [(type-id x) (mapv encode x)]
           (keyword? x)  (format "\ufdd0'%s" (subs (str x) 1))
           (symbol?  x)  (format "\ufdd1'%s" (str x))
           :else         x)))
@@ -12,10 +13,12 @@
 
 (defn decode [x]
   (let [ctor #(nth [() [] {} #{}] (first %)) 
+        m?   #(and (vector? %) (= 2 (first %)))
         kw?  #(and (sequential? %) (= \ufdd0 (first %))) 
         sym? #(and (sequential? %) (= \ufdd1 (first %))) 
         seq* #(if (list? %) (reverse %) %)]
-    (cond (vector?  x)  (seq* (into (ctor x) (mapv decode (second x)))) 
+    (cond (m?       x)  (into {} (mapv (partial mapv decode) (second x)))
+          (vector?  x)  (seq* (into (ctor x) (mapv decode (second x)))) 
           (kw?      x)  (keyword (subs x 2))
           (sym?     x)  (symbol (subs x 2))
           :else         x)))
