@@ -1,11 +1,11 @@
 # cljson
 
-Cljson encodes Clojure/ClojureScript symbols and keywords as strings
-in JSON.
+Cljson is an [edn](https://github.com/edn-format/edn) reader and writer that uses
+JSON for the transport format. This should be fast to parse and write in the browser.
 
 ## Usage
 
-FIXME
+Artifacts are published on [Clojars](http://clojars.org/tailrecursion/cljson).
 
 ## License
 
