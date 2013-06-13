@@ -9,8 +9,6 @@
 (defn decode [x]
   (let [ctor #(nth [() [] {} #{}] (first %)) 
         m?   #(and (vector? %) (= 2 (first %)))
-        kw?  #(and (sequential? %) (= \ufdd0 (first %))) 
-        sym? #(and (sequential? %) (= \ufdd1 (first %))) 
         seq* #(if (list? %) (reverse %) %)]
     (cond (m?       x)  (into {} (mapv (partial mapv decode) (second x)))
           (vector?  x)  (seq* (into (ctor x) (mapv decode (second x)))) 
