@@ -1,6 +1,6 @@
 # cljson
 
-Cljson is a Clojure/ClojureScript data to JSON converter. It supports all the
+Cljson makes it possible to encode Clojure data as JSON. It supports all the
 data types that ClojureScript supports. No support for tagged literals yet.
 
 ## Install
