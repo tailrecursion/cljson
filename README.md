@@ -3,6 +3,8 @@
 Cljson is an [edn](https://github.com/edn-format/edn) reader and writer that uses
 JSON for the transport format. This should be fast in the browser.
 
+Tagged literals are not yet supported.
+
 ## Install
 
 Artifacts are published on [Clojars](http://clojars.org/tailrecursion/cljson).
