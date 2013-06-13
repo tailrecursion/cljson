@@ -1,9 +1,7 @@
 # cljson
 
-Cljson is an Clojure data reader and writer that uses JSON for the transport.
-This should be fast in the browser.
-
-Tagged literals are not yet supported.
+Cljson is a Clojure/ClojureScript data to JSON converter. It supports all the
+data types that ClojureScript supports. No support for tagged literals yet.
 
 ## Install
 
