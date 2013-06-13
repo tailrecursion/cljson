@@ -29,9 +29,14 @@ serverside Clojure application and the ClojureScript running in a browser withou
 needing to use `#'read-string` or `#'pr-str`, which are slow in the browser.
 
 There are two functions exported by this library: `clj->cljson` and `cljson->clj`.
-They convert Clojure data to and from JSON strings in the Clojure library, and to
-and from native JavaScript primitives which can be encoded as JSON in the ClojureScript
-library.
+They convert Clojure data to and from JSON strings.
+
+```clojure
+tailrecursion.cljson=> (clj->cljson [1 2 3])
+"[1,[1,2,3]]"
+tailrecursion.cljson=> (clj->cljson {[1 2 3] :foo 'bar #{"bar"}})
+"[2,[[[1,[1,2,3]],\"\\ufdd0'foo\"],[\"\\ufdd1'bar\",[3,[\"bar\"]]]]]"
+```
 
 ## License
 
