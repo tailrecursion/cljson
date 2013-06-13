@@ -1,7 +1,7 @@
 # cljson
 
 Cljson is an [edn](https://github.com/edn-format/edn) reader and writer that uses
-JSON for the transport format. This should be fast to parse and write in the browser.
+JSON for the transport format. This should be fast in the browser.
 
 ## Install
 
@@ -20,6 +20,8 @@ Maven:
   <version>0.1.0-SNAPSHOT</version>
 </dependency>
 ```
+
+## Usage
 
 ## License
 
