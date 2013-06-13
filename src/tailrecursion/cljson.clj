@@ -12,8 +12,8 @@
 
 (defn decode [x]
   (let [ctor #(nth [() [] {} #{}] (first %)) 
-        kw?  #(= \ufdd0 (first %))
-        sym? #(= \ufdd1 (first %))
+        kw?  #(and (sequential? %) (= \ufdd0 (first %))) 
+        sym? #(and (sequential? %) (= \ufdd1 (first %))) 
         seq* #(if (list? %) (reverse %) %)]
     (cond (vector?  x)  (seq* (into (ctor x) (mapv decode (second x)))) 
           (kw?      x)  (keyword (subs x 2))
