@@ -30,11 +30,6 @@ Maven:
 
 ## Usage
 
-Cljson transforms Clojure data to and from the restricted set of types which can
-be encoded as JSON. The resulting JSON can be passed back and forth between a
-serverside Clojure application and the ClojureScript running in a browser without
-needing to use `#'read-string` or `#'pr-str`, which are slow in the browser.
-
 There are two functions exported by this library: `clj->cljson` and `cljson->clj`.
 They convert Clojure data to and from JSON strings.
 
