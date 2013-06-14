@@ -1,7 +1,14 @@
 # cljson
 
-Cljson is an [edn](https://github.com/edn-format/edn) reader and writer that uses
-JSON for the transport format. This should be fast in the browser.
+Use cljson to send data between Clojure and ClojureScript applications using JSON
+as the data transfer format. The cljson library has implementations for Clojure and
+ClojureScript and supports all the data types that ClojureScript supports. No support
+for tagged literals yet.
+
+## Why?
+
+Parsing edn with `#'read-string` and stringifying with `#'pr-str` is slow in the
+browser, but they have fast, native JSON parsers and stringifiers.
 
 ## Install
 
@@ -23,15 +30,22 @@ Maven:
 
 ## Usage
 
-Cljson transforms Clojure data to and from the restricted set of types which can
-be encoded as JSON. The resulting JSON can be passed back and forth between a
-serverside Clojure application and the ClojureScript running in a browser without
-needing to use `#'read-string` or `#'pr-str`, which are slow in the browser.
-
 There are two functions exported by this library: `clj->cljson` and `cljson->clj`.
-They convert Clojure data to and from JSON strings in the Clojure library, and to
-and from native JavaScript primitives which can be encoded as JSON in the ClojureScript
-library.
+They convert Clojure data to and from JSON strings.
+
+```clojure
+tailrecursion.cljson=> (clj->cljson [1 2 3])
+"[1,[1,2,3]]"
+
+tailrecursion.cljson=> (cljson->clj "[1,[1,2,3]]")
+[1 2 3]
+
+tailrecursion.cljson=> (clj->cljson {[1 2 3] :foo 'bar #{"bar"}})
+"[2,[[[1,[1,2,3]],\"\\ufdd0'foo\"],[\"\\ufdd1'bar\",[3,[\"bar\"]]]]]"
+
+tailrecursion.cljson=> (cljson->clj "[2,[[[1,[1,2,3]],\"\\ufdd0'foo\"],[\"\\ufdd1'bar\",[3,[\"bar\"]]]]]")
+{[1 2 3] :foo, bar #{"bar"}}
+```
 
 ## License
 
