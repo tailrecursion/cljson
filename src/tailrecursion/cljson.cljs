@@ -25,7 +25,7 @@
   cljs.core.PersistentHashSet
   (encode [o] (doto (js-obj)
                 (aset (tag o) (into-array (map encode o)))))
-  js/String, js/Boolean, js/Number
+  js/String, js/Boolean, js/Number, nil
   (encode [o] o)))
 
 (defn clj->cljson

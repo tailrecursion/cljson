@@ -40,7 +40,7 @@
   (encode [o] (format "\ufdd0'%s" (subs (str o) 1)))
   clojure.lang.Symbol
   (encode [o] (format "\ufdd1'%s" o))
-  String, Boolean, Long, Double
+  String, Boolean, Long, Double, nil
   (encode [o] o))
 
 (defn clj->cljson
@@ -67,6 +67,8 @@
 
 (defmethod decode-str \ufdd1 [s]
   (symbol (subs s 2)))
+
+(defmethod decode-str ::default [s] s)
 
 (defn decode
   [v]
