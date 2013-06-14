@@ -1,24 +1,63 @@
-(ns tailrecursion.cljson)
+(ns tailrecursion.cljson
+  (:require-macros [tailrecursion.cljson :refer [extends-protocol]]))
 
-(defn encode [x]
-  (let [mapa    #(apply array (map %1 %2))
-        type-id #(cond (seq? %) "l" (map? %) "m" (set? %) "s")]
-    (cond (vector? x) (mapa encode x)
-          (coll?   x) (doto (js-obj) (aset (type-id x) (mapa encode x)))
-          :else       x)))
+(defprotocol Collection
+  (tag [o]))
 
-(defn decode [x]
-  (let [ctor  {"m" {} "s" #{}}
-        a?    #(js* "~{} instanceof Array" %)
-        o?    #(js* "~{} instanceof Object" %)
-        l?    #(and (o? %) (.hasOwnProperty % "l"))
-        m?    #(and (.hasOwnProperty % "m") "m")
-        s?    #(and (.hasOwnProperty % "s") "s")
-        coll  (and (o? x) (or (m? x) (s? x)))]
-    (cond (a? x)  (mapv decode x)
-          (l? x)  (map decode x)
-          coll    (into (ctor coll) (mapv decode (aget x coll))) 
-          :else     x)))
+(defprotocol Encode
+  (encode [o]))
 
-(defn clj->cljson [x] (.stringify js/JSON (encode x)))
-(defn cljson->clj [x] (decode (.parse js/JSON x)))
+(extends-protocol Collection
+  cljs.core.PersistentArrayMap
+  cljs.core.PersistentHashMap
+  (tag [_] "m")
+  cljs.core.ISeq
+  (tag [_] "l")
+  cljs.core.PersistentHashSet
+  (tag [_] "s"))
+
+(extends-protocol Encode
+  cljs.core.Vector
+  (encode [o] (into-array (map encode o))
+  cljs.core.PersistentArrayMap
+  cljs.core.PersistentHashMap
+  cljs.core.ISeq
+  cljs.core.PersistentHashSet
+  (encode [o] (doto (js-obj)
+                (aset (tag o) (into-array (map encode o)))))
+  js/String, js/Boolean, js/Number
+  (encode [o] o)))
+
+(defn clj->cljson
+  [v]
+  (.stringify js/JSON (encode v)))
+
+(declare decode)
+
+(defmulti decode-coll
+  #(js* "(function(o){for(var k in o) return k;})(~{})" %))
+
+(defmethod decode-coll "m" [o]
+  (into {} (map decode (aget o "m"))))
+
+(defmethod decode-coll "l" [o]
+  (apply list (map decode (aget o "l"))))
+
+(defmethod decode-coll "s" [o]
+  (set (map decode (aget o "s"))))
+
+(defn array? [o]
+  (js* "(~{} instanceof Array)" o))
+
+(defn object? [o]
+  (js* "(~{} instanceof Object)" o))
+
+(defn decode
+  [v]
+  (cond (array? v)  (mapv decode v)
+        (object? v) (decode-coll v)
+        :else v))
+
+(defn cljson->clj
+  [x]
+  (decode (.parse js/JSON x)))
