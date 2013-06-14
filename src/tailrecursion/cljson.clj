@@ -1,6 +1,6 @@
 (ns tailrecursion.cljson
   (:require
-    [clojure.data.json :refer [write-str read-str]]))
+   [cheshire.core :refer [generate-string parse-string]]))
 
 (declare decode)
 
@@ -9,8 +9,10 @@
 (defprotocol  Encode      (encode [o]))
 (defmulti     decode-tag  (comp key first))
 
-(defn clj->cljson "Convert clj data to JSON string." [v] (write-str (encode v)))
-(defn cljson->clj "Convert JSON string to clj data." [s] (decode (read-str s)))
+(defn clj->cljson "Convert clj data to JSON string." [v]
+  (generate-string (encode v) {:escape-non-ascii true}))
+(defn cljson->clj "Convert JSON string to clj data." [s]
+  (decode (parse-string s)))
 
 ;; INTERNAL ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -57,7 +59,8 @@
         (throw (Exception. (format "No reader function for tag '%s'." tag))))))
 
 (defn decode [v]
-  (cond (vector? v)
+  (cond (or (seq? v)
+            (vector? v))
         (mapv decode v)
         (map? v)
         (decode-tag v)
