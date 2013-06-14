@@ -49,16 +49,16 @@
 
 (declare decode)
 
-(defmulti decode-coll (comp first keys))
+(defmulti decode-coll (comp key first))
 
 (defmethod decode-coll "m" [m]
-  (into {} (map decode (first (vals m)))))
+  (into {} (map decode (get m "m"))))
 
 (defmethod decode-coll "l" [m]
-  (apply list (map decode (first (vals m)))))
+  (apply list (map decode (get m "l"))))
 
 (defmethod decode-coll "s" [m]
-  (set (map decode (first (vals m)))))
+  (set (map decode (get m "s"))))
 
 (defmulti decode-str #(.charAt ^String % 0))
 
