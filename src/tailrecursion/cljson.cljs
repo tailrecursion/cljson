@@ -8,20 +8,16 @@
           :else       x)))
 
 (defn decode [x]
-  (let [ctor      {"l" () "m" {} "s" #{}}
-        a?        #(js* "~{} instanceof Array" %)
-        o?        #(js* "~{} instanceof Object" %)
-        l?        #(when (.hasOwnProperty % "l") "l")
-        m?        #(when (.hasOwnProperty % "m") "m")
-        s?        #(when (.hasOwnProperty % "s") "s")
-        kw?       #(and (string? %) (= \ufdd0 (first %))) 
-        sym?      #(and (string? %) (= \ufdd1 (first %))) 
-        seq*      #(if (list? %) (reverse %) %)
-        coll-typ  (and (o? x) (or (m? x) (l? x) (s? x)))]
-    (cond (a?   x)  (mapv decode x)
-          coll-typ  (seq* (into (ctor coll-typ) (mapv decode (aget x coll)))) 
-          (kw?  x)  (keyword (subs x 2))
-          (sym? x)  (symbol (subs x 2))
+  (let [ctor  {"m" {} "s" #{}}
+        a?    #(js* "~{} instanceof Array" %)
+        o?    #(js* "~{} instanceof Object" %)
+        l?    #(and (o? %) (.hasOwnProperty % "l"))
+        m?    #(and (.hasOwnProperty % "m") "m")
+        s?    #(and (.hasOwnProperty % "s") "s")
+        coll  (and (o? x) (or (m? x) (s? x)))]
+    (cond (a? x)  (mapv decode x)
+          (l? x)  (map decode x)
+          coll    (into (ctor coll) (mapv decode (aget x coll))) 
           :else     x)))
 
 (defn clj->cljson [x] (.stringify js/JSON (encode x)))

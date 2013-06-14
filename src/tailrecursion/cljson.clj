@@ -11,12 +11,12 @@
           :else         x)))
 
 (defn decode [x]
-  (let [ctor {"l" () "m" {} "s" #{}}
-        m?   #(and (map? %) (= "m" (first (first %))))
+  (let [ctor {"m" {} "s" #{}}
+        l?   #(and (map? %) (= "l" (first (first %))))
         kw?  #(and (string? %) (= \ufdd0 (first %))) 
-        sym? #(and (string? %) (= \ufdd1 (first %))) 
-        seq* #(if (list? %) (reverse %) %)]
+        sym? #(and (string? %) (= \ufdd1 (first %)))]
     (cond (vector?  x)  (mapv decode x)
+          (l?       x)  (map decode (second (first x)))
           (map?     x)  (let [[k v] (first x)] (into (ctor k) (mapv decode v)))
           (kw?      x)  (keyword (subs x 2))
           (sym?     x)  (symbol (subs x 2))
