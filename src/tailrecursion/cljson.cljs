@@ -19,7 +19,7 @@
         seq*      #(if (list? %) (reverse %) %)
         coll-typ  (and (o? x) (or (m? x) (l? x) (s? x)))]
     (cond (a?   x)  (mapv decode x)
-          coll-typ  (into (ctor coll-typ) (mapv decode (aget x coll)))
+          coll-typ  (seq* (into (ctor coll-typ) (mapv decode (aget x coll)))) 
           (kw?  x)  (keyword (subs x 2))
           (sym? x)  (symbol (subs x 2))
           :else     x)))
