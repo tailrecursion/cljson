@@ -10,11 +10,12 @@
 
 (defmacro extends-protocol
   [protocol & specs]
-  `(extend-protocol ~protocol
-     ~@(mapcat identity
-         (for [[classes impls] (partition 2 (partition-by symbol? specs))
-               class classes]
-           (list* class impls)))))
+  (let [class? #(or (symbol? %) (nil? %))]
+    `(extend-protocol ~protocol
+       ~@(mapcat identity
+           (for [[classes impls] (partition 2 (partition-by class? specs))
+                 class classes]
+             (list* class impls))))))
 
 (extends-protocol Collection
   clojure.lang.PersistentArrayMap
