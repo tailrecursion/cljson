@@ -34,22 +34,25 @@ There are two functions exported by this library: `clj->cljson` and `cljson->clj
 They convert Clojure data to and from JSON strings.
 
 ```clojure
-tailrecursion.cljson=> (clj->cljson [1 2 3])
+user=> (use 'tailrecursion.cljson)
+nil
+
+user=> (clj->cljson [1 2 3])
 "[1,2,3]"
 
-tailrecursion.cljson=> (cljson->clj "[1,2,3]")
+user=> (cljson->clj "[1,2,3]")
 [1 2 3]
 
-tailrecursion.cljson=> (clj->cljson '(1 2 3))
+user=> (clj->cljson '(1 2 3))
 "{\"l\":[1,2,3]}"
 
-tailrecursion.cljson=> (cljson->clj "{\"l\":[1,2,3]}")
+user=> (cljson->clj "{\"l\":[1,2,3]}")
 (1 2 3)
 
-tailrecursion.cljson=> (clj->cljson {[1 2 3] :foo 'bar #{"bar"}})
+user=> (clj->cljson {[1 2 3] :foo 'bar #{"bar"}})
 "{\"m\":[[[1,2,3],\" 'foo\"],[\" 'bar\",{\"s\":[\"bar\"]}]]}"
 
-tailrecursion.cljson=> (cljson->clj "{\"m\":[[[1,2,3],\" 'foo\"],[\" 'bar\",{\"s\":[\"bar\"]}]]}")
+user=> (cljson->clj "{\"m\":[[[1,2,3],\" 'foo\"],[\" 'bar\",{\"s\":[\"bar\"]}]]}")
 {[1 2 3] :foo, bar #{"bar"}}
 ```
 
