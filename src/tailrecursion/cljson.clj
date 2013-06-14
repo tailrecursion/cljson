@@ -57,13 +57,13 @@
 (defmulti decode-tag (comp key first))
 
 (defmethod decode-tag "m" [m]
-  (into {} (map decode (get m "cljson/map"))))
+  (into {} (map decode (get m "m"))))
 
 (defmethod decode-tag "l" [m]
-  (apply list (map decode (get m "cljson/list"))))
+  (apply list (map decode (get m "l"))))
 
 (defmethod decode-tag "s" [m]
-  (set (map decode (get m "cljson/set"))))
+  (set (map decode (get m "s"))))
 
 (defmethod decode-tag :default [m]
   (let [[tag val] (first m)]
