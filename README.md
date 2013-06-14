@@ -8,7 +8,7 @@ for tagged literals yet.
 ## Why?
 
 Parsing edn with `#'read-string` and stringifying with `#'pr-str` is slow in the
-browser, but they have fast, native JSON parsers and stringifiers.
+browser, but browsers have fast native parsers and stringifiers for JSON.
 
 ## Install
 
@@ -35,15 +35,15 @@ They convert Clojure data to and from JSON strings.
 
 ```clojure
 tailrecursion.cljson=> (clj->cljson [1 2 3])
-"[1,[1,2,3]]"
+"[1,2,3]"
 
-tailrecursion.cljson=> (cljson->clj "[1,[1,2,3]]")
+tailrecursion.cljson=> (cljson->clj "[1,2,3]")
 [1 2 3]
 
 tailrecursion.cljson=> (clj->cljson {[1 2 3] :foo 'bar #{"bar"}})
-"[2,[[[1,[1,2,3]],\"\\ufdd0'foo\"],[\"\\ufdd1'bar\",[3,[\"bar\"]]]]]"
+"{\"m\":[[[1,2,3],\" 'foo\"],[\" 'bar\",{\"s\":[\"bar\"]}]]}"
 
-tailrecursion.cljson=> (cljson->clj "[2,[[[1,[1,2,3]],\"\\ufdd0'foo\"],[\"\\ufdd1'bar\",[3,[\"bar\"]]]]]")
+tailrecursion.cljson=> (cljson->clj "{\"m\":[[[1,2,3],\" 'foo\"],[\" 'bar\",{\"s\":[\"bar\"]}]]}")
 {[1 2 3] :foo, bar #{"bar"}}
 ```
 
