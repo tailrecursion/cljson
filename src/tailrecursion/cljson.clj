@@ -1,26 +1,80 @@
 (ns tailrecursion.cljson
   (:require
-    [clojure.data.json  :as j]))
+    [clojure.data.json :refer [write-str read-str]]))
 
-(defn encode [x]
-  (let [type-id #(cond (seq? %) "l" (map? %) "m" (set? %) "s")]
-    (cond (vector?  x)  (mapv encode x)
-          (coll?    x)  {(type-id x) (mapv encode x)} 
-          (keyword? x)  (format "\ufdd0'%s" (subs (str x) 1))
-          (symbol?  x)  (format "\ufdd1'%s" (str x))
-          :else         x)))
+(defprotocol Collection
+  (tag [o]))
 
-(defn decode [x]
-  (let [ctor {"m" {} "s" #{}}
-        l?   #(and (map? %) (= "l" (first (first %))))
-        kw?  #(and (string? %) (= \ufdd0 (first %))) 
-        sym? #(and (string? %) (= \ufdd1 (first %)))]
-    (cond (vector?  x)  (mapv decode x)
-          (l?       x)  (map decode (second (first x)))
-          (map?     x)  (let [[k v] (first x)] (into (ctor k) (mapv decode v)))
-          (kw?      x)  (keyword (subs x 2))
-          (sym?     x)  (symbol (subs x 2))
-          :else         x)))
+(defprotocol Encode
+  (encode [o]))
 
-(defn clj->cljson [x] (j/write-str (encode x)))
-(defn cljson->clj [x] (decode (j/read-str x)))
+(defmacro extends-protocol
+  [protocol & specs]
+  `(extend-protocol ~protocol
+     ~@(mapcat identity
+         (for [[classes impls] (partition 2 (partition-by symbol? specs))
+               class classes]
+           (list* class impls)))))
+
+(extends-protocol Collection
+  clojure.lang.PersistentArrayMap
+  clojure.lang.PersistentHashMap
+  (tag [_] "m")
+  clojure.lang.ISeq
+  clojure.lang.PersistentList
+  (tag [_] "l")
+  clojure.lang.PersistentHashSet
+  (tag [_] "s"))
+
+(extends-protocol Encode
+  clojure.lang.MapEntry
+  clojure.lang.PersistentVector
+  (encode [o] (mapv encode o))
+  clojure.lang.PersistentArrayMap
+  clojure.lang.PersistentHashMap
+  clojure.lang.ISeq
+  clojure.lang.PersistentList
+  clojure.lang.PersistentHashSet
+  (encode [o] {(tag o) (mapv encode o)})
+  clojure.lang.Keyword
+  (encode [o] (format "\ufdd0'%s" (subs (str o) 1)))
+  clojure.lang.Symbol
+  (encode [o] (format "\ufdd1'%s" o))
+  String, Boolean, Long, Double
+  (encode [o] o))
+
+(defn clj->cljson
+  [v]
+  (write-str (encode v)))
+
+(declare decode)
+
+(defmulti decode-coll (comp first keys))
+
+(defmethod decode-coll "m" [m]
+  (into {} (map decode (first (vals m)))))
+
+(defmethod decode-coll "l" [m]
+  (apply list (map decode (first (vals m)))))
+
+(defmethod decode-coll "s" [m]
+  (set (map decode (first (vals m)))))
+
+(defmulti decode-str first)
+
+(defmethod decode-str \ufdd0 [s]
+  (keyword (subs s 2)))
+
+(defmethod decode-str \ufdd1 [s]
+  (symbol (subs s 2)))
+
+(defn decode
+  [v]
+  (cond (vector? v) (mapv decode v)
+        (map? v)    (decode-coll v)
+        (string? v) (decode-str v)
+        :else v))
+
+(defn cljson->clj
+  [json]
+  (decode (read-str json)))
