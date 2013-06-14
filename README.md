@@ -5,6 +5,11 @@ as the data transfer format. The cljson library has implementations for Clojure 
 ClojureScript and supports all the data types that ClojureScript supports. No support
 for tagged literals yet.
 
+## Why?
+
+Because browsers have fast, native JSON parsers and stringifiers. Parsing edn with
+`#'read-string` and stringifying with `#'pr-str` is expensive.
+
 ## Install
 
 Artifacts are published on [Clojars](http://clojars.org/tailrecursion/cljson).
