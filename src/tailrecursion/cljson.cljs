@@ -15,27 +15,40 @@
 
 ;; INTERNAL ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn get-tag [o] (js* "(function(o){for(var k in o) return k;})(~{})" %))
-(defn array?  [o] (js* "(~{} instanceof Array)" o))
-(defn object? [o] (js* "(~{} instanceof Object)" o))
+(def get-tag    #(js* "(function(o){for(var k in o) return k;})(~{})" %))
+(def array?     #(js* "(~{} instanceof Array)" %))
+(def object?    #(js* "(~{} instanceof Object)" %))
+(def str?       #(= "string" (js* "(typeof ~{})" %)))
+(def enc-coll   #(doto (js-obj) (aset %1 (into-array (map encode %2)))))
+(def inst-str   #(date/fromRfc822String (str %)))
+(def decode-str #(let [s (subs % 2)]
+                   (case (first %) \ufdd0 (keyword s) \ufdd1 (symbol s) %)))
 
 (extends-protocol Encode
   cljs.core.Vector
-  (encode [o] (into-array (map encode o))
+  cljs.core.PersistentVector
+  (encode [o] (into-array (map encode o)))
   cljs.core.PersistentArrayMap
   cljs.core.PersistentHashMap
-  (encode [o] (doto (js-obj) (aset "m" (into-array (map encode o)))))
-  cljs.core.ISeq
-  (encode [o] (doto (js-obj) (aset "l" (into-array (map encode o)))))
+  (encode [o] (enc-coll "m" o))
+  cljs.core.IndexedSeq
+  cljs.core.RSeq
+  cljs.core.List
+  cljs.core.EmptyList
+  cljs.core.Cons
+  cljs.core.LazySeq
+  cljs.core.ChunkedCons
+  cljs.core.ChunkedSeq
+  cljs.core.Range
+  (encode [o] (enc-coll "l" o))
   cljs.core.PersistentHashSet
-  (encode [o] (doto (js-obj) (aset "s" (into-array (map encode o)))))
+  (encode [o] (enc-coll "s" o))
   js/Date
-  (encode [o] (doto (js-obj)
-                (aset "inst" (.toUTCIsoString (date/fromRfc822String (str o))))))
+  (encode [o] (doto (js-obj) (.toUTCIsoString (inst-str o))))
   cljs.core/UUID
   (encode [o] (doto (js-obj) (aset "uuid" (.-uuid o))))
   js/String, js/Boolean, js/Number, nil
-  (encode [o] o)))
+  (encode [o] o))
 
 (defmethod decode-tag "m" [o] (into {} (map decode (aget o "m"))))
 (defmethod decode-tag "l" [o] (apply list (map decode (aget o "l"))))
@@ -48,4 +61,7 @@
     (if reader (reader (decode val)) (throw (read-ex tag)))))
 
 (defn decode [v]
-  (cond (array? v) (mapv decode v) (object? v) (decode-tag v) :else v))
+  (cond (str?    v) (decode-str v)
+        (array?  v) (mapv decode v)
+        (object? v) (decode-tag v)
+        :else       v))
