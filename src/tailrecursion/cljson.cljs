@@ -11,9 +11,9 @@
   (let [ctor      {"l" () "m" {} "s" #{}}
         a?        #(js* "~{} instanceof Array" %)
         o?        #(js* "~{} instanceof Object" %)
-        l?        #(and (.hasOwnProperty % "l") "l")
-        m?        #(and (.hasOwnProperty % "m") "m")
-        s?        #(and (.hasOwnProperty % "s") "s")
+        l?        #(when (.hasOwnProperty % "l") "l")
+        m?        #(when (.hasOwnProperty % "m") "m")
+        s?        #(when (.hasOwnProperty % "s") "s")
         kw?       #(and (string? %) (= \ufdd0 (first %))) 
         sym?      #(and (string? %) (= \ufdd1 (first %))) 
         seq*      #(if (list? %) (reverse %) %)
