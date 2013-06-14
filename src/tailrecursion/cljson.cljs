@@ -12,11 +12,11 @@
 (extends-protocol Tagged
   cljs.core.PersistentArrayMap
   cljs.core.PersistentHashMap
-  (tag [_] "cljson/map")
+  (tag [_] "m")
   cljs.core.ISeq
-  (tag [_] "cljson/list")
+  (tag [_] "l")
   cljs.core.PersistentHashSet
-  (tag [_] "cljson/set"))
+  (tag [_] "s"))
 
 (extends-protocol Encode
   cljs.core.Vector
@@ -45,13 +45,13 @@
 
 (defmulti decode-tag get-tag)
 
-(defmethod decode-tag "cljson/map" [o]
+(defmethod decode-tag "m" [o]
   (into {} (map decode (aget o "cljson/map"))))
 
-(defmethod decode-tag "cljson/list" [o]
+(defmethod decode-tag "l" [o]
   (apply list (map decode (aget o "cljson/list"))))
 
-(defmethod decode-tag "cljson/set" [o]
+(defmethod decode-tag "s" [o]
   (set (map decode (aget o "cljson/set"))))
 
 (defmethod decode-tag :default [o]

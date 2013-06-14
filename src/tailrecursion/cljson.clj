@@ -20,12 +20,12 @@
 (extends-protocol Tagged
   clojure.lang.PersistentArrayMap
   clojure.lang.PersistentHashMap
-  (tag [_] "cljson/map")
+  (tag [_] "m")
   clojure.lang.ISeq
   clojure.lang.PersistentList
-  (tag [_] "cljson/list")
+  (tag [_] "l")
   clojure.lang.PersistentHashSet
-  (tag [_] "cljson/set"))
+  (tag [_] "s"))
 
 (extends-protocol Encode
   clojure.lang.MapEntry
@@ -56,13 +56,13 @@
 
 (defmulti decode-tag (comp key first))
 
-(defmethod decode-tag "cljson/map" [m]
+(defmethod decode-tag "m" [m]
   (into {} (map decode (get m "cljson/map"))))
 
-(defmethod decode-tag "cljson/list" [m]
+(defmethod decode-tag "l" [m]
   (apply list (map decode (get m "cljson/list"))))
 
-(defmethod decode-tag "cljson/set" [m]
+(defmethod decode-tag "s" [m]
   (set (map decode (get m "cljson/set"))))
 
 (defmethod decode-tag :default [m]
