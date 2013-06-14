@@ -60,7 +60,7 @@
 (defmethod decode-coll "s" [m]
   (set (map decode (first (vals m)))))
 
-(defmulti decode-str first)
+(defmulti decode-str #(.charAt ^String % 0))
 
 (defmethod decode-str \ufdd0 [s]
   (keyword (subs s 2)))
