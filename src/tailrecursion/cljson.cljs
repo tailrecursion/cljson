@@ -4,7 +4,7 @@
   (let [mapa    #(apply array (map %1 %2))
         type-id #(cond (seq? %) "l" (map? %) "m" (set? %) "s")]
     (cond (vector? x) (mapa encode x)
-          (coll?   x) (js-obj (type-id x) (mapa encode x)) 
+          (coll?   x) (doto (js-obj) (aset (type-id x) (mapa encode x)))
           :else       x)))
 
 (defn decode [x]

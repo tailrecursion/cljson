@@ -22,5 +22,5 @@
           (sym?     x)  (symbol (subs x 2))
           :else         x)))
 
-(defn clj->cljson [x] (j/write-str (encode x) :escape-unicode false :escape-slash false))
+(defn clj->cljson [x] (j/write-str (encode x)))
 (defn cljson->clj [x] (decode (j/read-str x)))
