@@ -56,9 +56,9 @@
 
 (defmethod decode-tag :default [o]
   (let [[tag val] [(get-tag o) (aget o tag)] 
-        reader    (or (get @tag-table tag) @*default-data-reader-fn*)
-        read-ex   #(js/Error. (format "No reader function for tag '%s'." %))]
-    (if reader (reader (decode val)) (throw (read-ex tag)))))
+        reader    (or (get @tag-table tag) @*default-data-reader-fn*)]
+    (if reader (reader (decode val))
+        (throw (js/Error. (format "No reader function for tag '%s'." tag))))))
 
 (defn decode [v]
   (cond (str?    v) (decode-str v)
