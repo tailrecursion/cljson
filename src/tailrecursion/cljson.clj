@@ -41,15 +41,17 @@
   java.util.UUID
   (encode [o] {"uuid" (str o)})
   clojure.lang.Keyword
-  (encode [o] (format "\ufdd0'%s" (subs (str o) 1)))
+  (encode [o] {"k" (subs (str o) 1)})
   clojure.lang.Symbol
-  (encode [o] (format "\ufdd1'%s" o))
+  (encode [o] {"y" (str o)})
   String, Boolean, Long, Double, nil
   (encode [o] o))
 
 (defmethod decode-tag "m" [m] (into {} (map decode (get m "m"))))
 (defmethod decode-tag "l" [m] (apply list (map decode (get m "l"))))
 (defmethod decode-tag "s" [m] (set (map decode (get m "s"))))
+(defmethod decode-tag "k" [m] (keyword (get m "k")))
+(defmethod decode-tag "y" [m] (symbol (get m "y")))
 
 (defmethod decode-tag :default [m]
   (let [[tag val] (first m)
@@ -59,15 +61,8 @@
         (throw (Exception. (format "No reader function for tag '%s'." tag))))))
 
 (defn decode [v]
-  (cond (or (seq? v)
-            (vector? v))
+  (cond (or (seq? v) (vector? v))
         (mapv decode v)
         (map? v)
         (decode-tag v)
-        (and (string? v)
-             (not (.isEmpty ^String v)))
-        (case (.charAt ^String v 0)
-          \ufdd0 (keyword (subs v 2))
-          \ufdd1 (symbol (subs v 2))
-          v)
         :else v))
