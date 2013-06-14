@@ -69,7 +69,7 @@
 (defmethod decode-str \ufdd1 [s]
   (symbol (subs s 2)))
 
-(defmethod decode-str ::default [s] s)
+(defmethod decode-str :default [s] s)
 
 (defn decode
   [v]
