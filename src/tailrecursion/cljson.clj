@@ -2,7 +2,6 @@
   (:require
     [clojure.data.json :refer [write-str read-str]]))
 
-(set! *warn-on-reflection* true)
 (defprotocol Tagged
   (tag [o]))
 
