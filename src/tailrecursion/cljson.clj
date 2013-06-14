@@ -2,7 +2,7 @@
   (:require
     [clojure.data.json :refer [write-str read-str]]))
 
-(declare encode decode)
+(declare decode)
 
 ;; PUBLIC ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -52,15 +52,19 @@
 (defmethod decode-tag :default [m]
   (let [[tag val] (first m)
         reader-fn (merge default-data-readers *data-readers*)
-        reader    (or (get reader-fn (symbol tag)) *default-data-reader-fn*)
-        read-ex   #(Exception. (format "No reader function for tag '%s'." %))]
-    (if reader (reader (decode val)) (throw (read-ex tag)))))
+        reader    (or (get reader-fn (symbol tag)) *default-data-reader-fn*)]
+    (if reader (reader (decode val))
+        (throw (Exception. (format "No reader function for tag '%s'." tag))))))
 
 (defn decode [v]
-  (cond (vector? v) (mapv decode v)
-        (map? v)    (decode-tag v)
-        (string? v) (case (.charAt ^String v 0)
-                      \ufdd0 (keyword (subs v 2))
-                      \ufdd1 (symbol (subs v 2))
-                      v)
+  (cond (vector? v)
+        (mapv decode v)
+        (map? v)
+        (decode-tag v)
+        (and (string? v)
+             (not (.isEmpty ^String v)))
+        (case (.charAt ^String v 0)
+          \ufdd0 (keyword (subs v 2))
+          \ufdd1 (symbol (subs v 2))
+          v)
         :else v))
