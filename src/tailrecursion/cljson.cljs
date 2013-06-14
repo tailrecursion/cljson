@@ -46,13 +46,13 @@
 (defmulti decode-tag get-tag)
 
 (defmethod decode-tag "m" [o]
-  (into {} (map decode (aget o "cljson/map"))))
+  (into {} (map decode (aget o "m"))))
 
 (defmethod decode-tag "l" [o]
-  (apply list (map decode (aget o "cljson/list"))))
+  (apply list (map decode (aget o "l"))))
 
 (defmethod decode-tag "s" [o]
-  (set (map decode (aget o "cljson/set"))))
+  (set (map decode (aget o "s"))))
 
 (defmethod decode-tag :default [o]
   (let [tag (get-tag o)
