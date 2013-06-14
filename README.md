@@ -40,6 +40,12 @@ tailrecursion.cljson=> (clj->cljson [1 2 3])
 tailrecursion.cljson=> (cljson->clj "[1,2,3]")
 [1 2 3]
 
+tailrecursion.cljson=> (clj->cljson '(1 2 3))
+"{\"l\":[1,2,3]}"
+
+tailrecursion.cljson=> (cljson->clj "{\"l\":[1,2,3]}")
+(1 2 3)
+
 tailrecursion.cljson=> (clj->cljson {[1 2 3] :foo 'bar #{"bar"}})
 "{\"m\":[[[1,2,3],\" 'foo\"],[\" 'bar\",{\"s\":[\"bar\"]}]]}"
 
