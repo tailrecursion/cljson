@@ -7,8 +7,9 @@ for tagged literals yet.
 
 ## Why?
 
-Parsing edn with `#'read-string` and stringifying with `#'pr-str` is slow in the
-browser, but browsers have fast native parsers and stringifiers for JSON.
+Parsing [edn](https://github.com/edn-format/edn) with `#'read-string` and
+stringifying with `#'pr-str` is slow in the browser, but browsers have fast native
+parsers and stringifiers for JSON.
 
 ## Install
 
