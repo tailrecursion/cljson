@@ -8,7 +8,7 @@ for tagged literals yet.
 ## Why?
 
 Parsing edn with `#'read-string` and stringifying with `#'pr-str` is slow in the
-browser, but they have fast, native JSON parsers and stringifiers.
+browser, but browsers have fast native JSON parsers and stringifiers.
 
 ## Install
 
