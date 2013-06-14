@@ -44,15 +44,15 @@
   
   (setup!)
 
-  ;; (println "testing collection roundtrip")
-  ;; (dotimes [_ *magic*]
-  ;;   (let [x (scalar)]
-  ;;     (assert (= x (-> x clj->cljson cljson->clj)))))
+  (println "testing collection roundtrip")
+  (dotimes [_ *magic*]
+    (let [x (scalar)]
+      (assert (= x (-> x clj->cljson cljson->clj)))))
   
-  ;; (println "testing collection roundtrip")
-  ;; (dotimes [_ *magic*]
-  ;;   (let [x (collection)]
-  ;;     (assert (= x (-> x clj->cljson cljson->clj)))))
+  (println "testing collection roundtrip")
+  (dotimes [_ *magic*]
+    (let [x (collection)]
+      (assert (= x (-> x clj->cljson cljson->clj)))))
 
   (println "Done.")
 
