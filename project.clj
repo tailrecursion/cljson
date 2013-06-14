@@ -7,4 +7,10 @@
   :dependencies [[org.clojure/clojure   "1.5.1"]
                  [cheshire "5.2.0"]
                  [org.clojure/data.generators "0.1.2"]]
-  :repl-options {:init-ns tailrecursion.cljson})
+  :repl-options {:init-ns tailrecursion.cljson}
+  :plugins [[lein-cljsbuild "0.3.2"]]
+  :cljsbuild {:builds {:test
+                       {:source-paths ["test"]
+                        :compiler {:output-to "test/test.js"
+                                   :optimizations :advanced}
+                        :jar false}}})

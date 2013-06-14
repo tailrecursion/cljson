@@ -16,16 +16,11 @@
 (defn scalar []
   (@#'g/call-through (g/rand-nth scalars)))
 
-(defn list
-  "Create a list with elements from f and sized from sizer."
-  ([f] (list f g/default-sizer))
-  ([f sizer] (into () (g/reps sizer f))))
-
 (def collections
   [[g/vec [scalars]]
    [g/set [scalars]]
    [g/hash-map [scalars scalars]]
-   [list [scalars]]])
+   [g/list [scalars]]])
 
 (defn collection
   "Returns a collection of scalar elements based on *rnd*."
