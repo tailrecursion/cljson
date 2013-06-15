@@ -66,4 +66,4 @@
         (throw (Exception. (format "No reader function for tag '%s'." tag))))))
 
 (defn decode [v]
-  (cond (vector? v) (mapv decode v) (map? v) (decode-tagged v) :else v))
+  (cond (seq? v) (mapv decode v) (map? v) (decode-tagged v) :else v))
