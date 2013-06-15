@@ -35,7 +35,7 @@
   (-encode [o] (mapv encode o))
   clojure.lang.PersistentArrayMap
   clojure.lang.PersistentHashMap
-  (-encode [o] {"m" (mapv encode o)})
+  (-encode [o] {"m" (mapv encode (apply concat o))})
   clojure.lang.ISeq
   clojure.lang.PersistentList
   (-encode [o] {"l" (mapv encode o)})
@@ -72,7 +72,7 @@
 (defn decode-tagged [o]
   (let [[tag val] (first o)]
     (case tag
-      "m" (into {} (map decode val))
+      "m" (apply hash-map (map decode val))
       "l" (apply list (map decode val))
       "s" (set (map decode val))
       "k" (keyword val)
