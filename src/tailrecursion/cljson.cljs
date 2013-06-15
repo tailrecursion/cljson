@@ -4,6 +4,7 @@
             [goog.date.DateTime :as date]))
 
 (declare encode decode get-tag)
+(def get-tag  #(js* "(function(o){for(var k in o) return k;})(~{})" %))
 
 ;; PUBLIC ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -27,7 +28,6 @@
 
 ;; INTERNAL ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def get-tag  #(js* "(function(o){for(var k in o) return k;})(~{})" %))
 (def object?  #(js* "(~{} instanceof Object)" %))
 (def en-coll  #(doto (js-obj) (aset %1 (into-array (map encode %2)))))
 (def en-str   #(doto (js-obj) (aset %1 %2)))
