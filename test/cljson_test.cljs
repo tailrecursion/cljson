@@ -41,20 +41,23 @@
 (def ^:dynamic *magic* 1000)
 
 (defn ^:export start []
-  
+
   (setup!)
+
+  (println "testing scalar roundtrip")
+  (dotimes [_ *magic*]
+    (let [x (scalar)
+          y (clj->cljson x)
+          z (cljson->clj y)]
+      (assert (= x z))))
 
   (println "testing collection roundtrip")
   (dotimes [_ *magic*]
-    (let [x (scalar)]
-      (assert (= x (-> x clj->cljson cljson->clj)))))
-  
-  (println "testing collection roundtrip")
-  (dotimes [_ *magic*]
-    (let [x (collection)]
-      (assert (= x (-> x clj->cljson cljson->clj)))))
+    (let [x (collection)
+          y (clj->cljson x)
+          z (cljson->clj y)]
+      (assert (= x z))))
 
   (println "Done.")
 
   )
-
