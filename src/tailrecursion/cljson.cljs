@@ -1,10 +1,10 @@
 (ns tailrecursion.cljson
   (:require-macros [tailrecursion.cljson :refer [extends-protocol]])
   (:require [cljs.reader :as reader :refer [*tag-table* *default-data-reader-fn*]]
-            [goog.date.DateTime :as date]))
+            [goog.date.DateTime :as date]
+            [clojure.string :refer [split]]))
 
-(declare encode decode get-tag)
-(def get-tag  #(js* "(function(o){for(var k in o) return k;})(~{})" %))
+(declare encode decode)
 
 ;; PUBLIC ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -12,9 +12,6 @@
   "Encode a cljs thing o as a JS tagged literal of the form {tag: value}, where
   value is composed of JS objects that can be encoded as JSON."
   (-encode [o]))
-
-(defmulti decode-tagged
-  get-tag)
 
 (defn clj->cljson
   "Convert clj data to JSON string."
@@ -28,9 +25,12 @@
 
 ;; INTERNAL ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(def get-tag  #(js* "(function(o){for(var k in o) return k;})(~{})" %))
 (def object?  #(js* "(~{} instanceof Object)" %))
-(def en-coll  #(doto (js-obj) (aset %1 (into-array (map encode %2)))))
 (def en-str   #(doto (js-obj) (aset %1 %2)))
+(def en-coll  #(doto (js-obj) (aset %1 (into-array (map encode %2)))))
+
+(defmulti decode-tagged get-tag)
 
 (defn encode [x]
   (cond (satisfies? EncodeTagged x) (-encode x)
@@ -43,17 +43,17 @@
         (or (string? x) (number? x) (nil? x)) x
         :else (throw (js/Error. (format "No cljson encoding for type '%s'." (type x))))))
 
-(defmethod decode-tagged "m" [o] (into {} (map decode (aget o "m"))))
-(defmethod decode-tagged "l" [o] (apply list (map decode (aget o "l"))))
-(defmethod decode-tagged "s" [o] (set (map decode (aget o "s"))))
-(defmethod decode-tagged "k" [o] (keyword (aget o "k")))
-(defmethod decode-tagged "y" [o] (symbol (aget o "y")))
-
-(defmethod decode-tagged :default [o]
+(defn decode-tagged [o]
   (let [tag (get-tag o), val (aget o tag)]
-    (if-let [reader (or (get @*tag-table* tag) @*default-data-reader-fn*)] 
-      (reader (decode val))
-      (throw (js/Error. (format "No reader function for tag '%s'." tag))))))
+    (case tag
+      "m" (into {} (map decode val))
+      "l" (apply list (map decode val))
+      "s" (set (map decode val))
+      "k" (keyword val)
+      "y" (apply symbol (split val #"/"))
+      (if-let [reader (or (get @*tag-table* tag) @*default-data-reader-fn*)] 
+        (reader (decode val))
+        (throw (js/Error. (format "No reader function for tag '%s'." tag)))))))
 
 (defn decode [v]
   (cond (array? v) (mapv decode v) (object? v) (decode-tagged v) :else v))
