@@ -67,7 +67,7 @@
 
   ;; benchmark
 
-  (def bench-colls (take *magic* (repeatedly collection)))
+  (def bench-colls (doall (take *magic* (repeatedly collection))))
 
   (println "cljs.core/pr-str")
   (time
@@ -76,20 +76,23 @@
 
   ;; BROKEN because of maps that read-string can't deal with.
   ;; omit g/hash-map from collections above to test without maps.
+  ;; (def pr-decode (mapv pr-str bench-colls))
   ;; (println "cljs.reader/read-string")
   ;; (time
-  ;;  (doseq [c bench-colls]
-  ;;    (reader/read-string (pr-str c))))
+  ;;  (doseq [c pr-decode]
+  ;;    (reader/read-string c)))
 
   (println "clj->cljson")
   (time
    (doseq [c bench-colls]
      (clj->cljson c)))
 
+  (def to-decode (mapv clj->cljson bench-colls))
+  
   (println "cljson->clj")
   (time
-   (doseq [c bench-colls]
-     (cljson->clj (clj->cljson c))))
+   (doseq [c to-decode]
+     (cljson->clj c)))
 
   (println "Done.")
 
