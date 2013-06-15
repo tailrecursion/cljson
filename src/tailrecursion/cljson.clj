@@ -7,7 +7,6 @@
 ;; PUBLIC ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defprotocol EncodeTagged (-encode [o]))
-(defmulti decode-tagged (comp key first))
 
 (defn clj->cljson
   "Convert clj data to JSON string."
