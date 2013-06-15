@@ -19,18 +19,26 @@
               g/number
               g/int
               g/string
-              g/symbol
               g/keyword
+              g/symbol
               ;; todo: uuid, date
               ])
 
 (defn scalar []
   (g/call-through (g/rand-nth scalars)))
 
+(def map-scalars
+  "Because of a mysterious bug in read-string these are the only
+  scalars we put in maps. TODO: investigate."
+  [(constantly nil)
+   g/number
+   g/int
+   g/string])
+
 (def collections
   [[g/vec [scalars]]
    [g/set [scalars]]
-   [g/hash-map [scalars scalars]]
+   [g/hash-map [map-scalars map-scalars]]
    [g/list [scalars]]])
 
 (defn collection
@@ -76,11 +84,11 @@
 
   ;; BROKEN because of maps that read-string can't deal with.
   ;; omit g/hash-map from collections above to test without maps.
-  ;; (def pr-decode (mapv pr-str bench-colls))
-  ;; (println "cljs.reader/read-string")
-  ;; (time
-  ;;  (doseq [c pr-decode]
-  ;;    (reader/read-string c)))
+  (def pr-decode (mapv pr-str bench-colls))
+  (println "cljs.reader/read-string")
+  (time
+   (doseq [c pr-decode]
+     (reader/read-string c)))
 
   (println "clj->cljson")
   (time
