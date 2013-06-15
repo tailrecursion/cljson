@@ -57,6 +57,23 @@ user=> (cljson->clj "{\"m\":[[1,2,3],{\"k\":\"foo\"},{\"y\":\"bar\"},{\"s\":[\"b
 {[1 2 3] :foo, bar #{"bar"}}
 ```
 
+### Tagged Literals
+
+Cljson provides the `EncodeTagged` protocol which can be extended to user types
+and records. This protocol is used to transform a Clojure/ClojureScript thing into
+JSON-ready data.
+
+If a type does not satisfy this protocol then cljson will use the core printer to
+obtain a printed representation of the thing. If the printed representation is a
+tagged literal then the data part is reread and converted to JSON-ready data.
+
+Reading of tagged literals is done via the normal tagged literal mechanisms built
+into Clojure and ClojureScript.
+
+Have a look at _cljson.clj_ and _cljson.cljs_ to see examples of this.
+
+### Metadata
+
 ## License
 
 Copyright © 2013 Alan Dipert and Micha Niskin
