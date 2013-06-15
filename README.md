@@ -3,7 +3,7 @@
 Use cljson to send data between Clojure and ClojureScript applications using JSON
 as the data transfer format. The cljson library has implementations for Clojure and
 ClojureScript and supports all the data types that ClojureScript supports, including
-tagged literals.
+tagged literals and metadata.
 
 ## Why?
 
