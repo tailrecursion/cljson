@@ -60,6 +60,6 @@ user=> (cljson->clj "{\"m\":[[[1,2,3],\" 'foo\"],[\" 'bar\",{\"s\":[\"bar\"]}]]}
 
 ## License
 
-Copyright © 2013 FIXME
+Copyright © 2013 Alan Dipert and Micha Niskin
 
 Distributed under the Eclipse Public License, the same as Clojure.
