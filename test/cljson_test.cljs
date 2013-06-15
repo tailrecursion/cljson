@@ -100,6 +100,17 @@
    (doseq [c to-decode]
      (cljson->clj c)))
 
+  (def to-stringify (mapv #(.parse js/JSON %) to-decode))
+  (println "JSON/stringify (no encode)")
+  (time
+   (doseq [c to-stringify]
+     (.stringify js/JSON c)))
+
+  (println "JSON/parse (no decode)")
+  (time
+   (doseq [c to-decode]
+     (.parse js/JSON c)))
+
   (println "Done.")
 
   )
