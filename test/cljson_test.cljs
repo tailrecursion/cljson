@@ -1,6 +1,7 @@
 (ns cljson-test
   (:require [tailrecursion.cljson :refer [clj->cljson cljson->clj]]
-            [generators :as g]))
+            [generators :as g]
+            [cljs.reader :as r]))
 
 (defn setup! []
   (set! cljs.core/*print-fn*
@@ -44,19 +45,43 @@
 
   (setup!)
 
-  (println "testing scalar roundtrip")
   (dotimes [_ *magic*]
     (let [x (scalar)
           y (clj->cljson x)
           z (cljson->clj y)]
       (assert (= x z))))
 
-  (println "testing collection roundtrip")
   (dotimes [_ *magic*]
     (let [x (collection)
           y (clj->cljson x)
           z (cljson->clj y)]
       (assert (= x z))))
+
+  ;; benchmark
+
+  (def bench-colls (take *magic* (repeatedly collection)))
+  
+  (println "cljs.core/pr-str")
+  (time
+   (doseq [c bench-colls]
+     (pr-str c)))
+
+  ;; BROKEN because of maps that read-string can't deal with.
+  ;; omit g/hash-map from collections above to test without maps.
+  ;; (println "cljs.reader/read-string")
+  ;; (time
+  ;;  (doseq [c bench-colls]
+  ;;    (r/read-string (pr-str c))))
+
+  (println "clj->cljson")
+  (time
+   (doseq [c bench-colls]
+     (clj->cljson c)))
+
+  (println "cljson->clj")
+  (time
+   (doseq [c bench-colls]
+     (cljson->clj (clj->cljson c))))
 
   (println "Done.")
 

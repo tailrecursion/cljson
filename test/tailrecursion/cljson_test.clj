@@ -40,36 +40,26 @@
     (let [x (collection)]
       (is (= x (-> x clj->cljson cljson->clj))))))
 
-;;; perf
+;;; benchmark
+
+(def bench-colls (take *magic* (repeatedly collection)))
 
 (deftest native-perf
-  (println "native-write")
+  (println "clojure.core/pr-str")
   (time
-   (dotimes [_ *magic*]
-     (pr-str (scalar))))
+   (doseq [c bench-colls]
+     (pr-str c)))
+  (println "clojure.core/read-string")
   (time
-   (dotimes [_ *magic*]
-     (pr-str (collection))))
-  (println "native-read")
-  (time
-   (dotimes [_ *magic*]
-     (read-string (pr-str (scalar)))))
-  (time
-   (dotimes [_ *magic*]
-     (read-string (pr-str (collection))))))
+   (doseq [c bench-colls]
+     (read-string (pr-str c)))))
 
 (deftest cljson-perf
-  (println "cljson-write")
+  (println "clj->cljson")
   (time
-   (dotimes [_ *magic*]
-     (clj->cljson (scalar))))
+   (doseq [c bench-colls]
+     (clj->cljson c)))
+  (println "cljson->clj")
   (time
-   (dotimes [_ *magic*]
-     (clj->cljson (collection))))
-  (println "cljson-read")
-  (time
-   (dotimes [_ *magic*]
-     (cljson->clj (clj->cljson (scalar)))))
-  (time
-   (dotimes [_ *magic*]
-     (cljson->clj (clj->cljson (collection))))))
+   (doseq [c bench-colls]
+     (cljson->clj (clj->cljson c)))))
