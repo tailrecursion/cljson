@@ -2,11 +2,11 @@
   (:require
    [cheshire.core :refer [generate-string parse-string]]))
 
-(declare decode)
+(declare encode decode)
 
 ;; PUBLIC ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defprotocol EncodeTagged (encode [o]))
+(defprotocol EncodeTagged (-encode [o]))
 (defmulti decode-tagged (comp key first))
 
 (defn clj->cljson
@@ -32,25 +32,34 @@
 (extends-protocol EncodeTagged
   clojure.lang.MapEntry
   clojure.lang.PersistentVector
-  (encode [o] (mapv encode o))
+  (-encode [o] (mapv encode o))
   clojure.lang.PersistentArrayMap
   clojure.lang.PersistentHashMap
-  (encode [o] {"m" (mapv encode o)})
+  (-encode [o] {"m" (mapv encode o)})
   clojure.lang.ISeq
   clojure.lang.PersistentList
-  (encode [o] {"l" (mapv encode o)})
+  (-encode [o] {"l" (mapv encode o)})
   clojure.lang.PersistentHashSet
-  (encode [o] {"s" (mapv encode o)})
-  java.util.Date
-  (encode [o] {"inst" (.format (.get @#'clojure.instant/thread-local-utc-date-format) o)})
-  java.util.UUID
-  (encode [o] {"uuid" (str o)})
+  (-encode [o] {"s" (mapv encode o)})
   clojure.lang.Keyword
-  (encode [o] {"k" (subs (str o) 1)})
+  (-encode [o] {"k" (subs (str o) 1)})
   clojure.lang.Symbol
-  (encode [o] {"y" (str o)})
+  (-encode [o] {"y" (str o)})
   String, Boolean, Long, Double, nil
-  (encode [o] o))
+  (-encode [o] o))
+
+(defn interpret [printed]
+  (when-let [match (re-matches #"#([^<]\S+)\s+(.*)" printed)]
+    (let [[_ tag printed-val] match]
+      {tag (encode (read-string printed-val))})))
+
+(defn encode [x]
+  (if (satisfies? EncodeTagged x)
+    (-encode x)
+    (let [printed (pr-str x)]
+      (or (interpret printed)
+          (throw (IllegalArgumentException.
+                  (format "No cljson encoding for '%s'." printed)))))))
 
 (defmethod decode-tagged "m" [m] (into {} (map decode (get m "m"))))
 (defmethod decode-tagged "l" [m] (apply list (map decode (get m "l"))))
