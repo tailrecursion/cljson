@@ -76,7 +76,7 @@
   (let [m {:abc 123}
         s (with-meta {:x 1} m)]
     (binding [*print-meta* true]
-      (assert (= (meta (cljson->clj (clj->cljson s)))))))
+      (assert (= (meta (cljson->clj (clj->cljson s))) m))))
 
   ;; benchmark
 
