@@ -46,8 +46,8 @@
 (defmethod decode-tagged "m" [o] (into {} (map decode (aget o "m"))))
 (defmethod decode-tagged "l" [o] (apply list (map decode (aget o "l"))))
 (defmethod decode-tagged "s" [o] (set (map decode (aget o "s"))))
-(defmethod decode-tagged "k" [o] (aget o "k"))
-(defmethod decode-tagged "y" [o] (aget o "y"))
+(defmethod decode-tagged "k" [o] (keyword (aget o "k")))
+(defmethod decode-tagged "y" [o] (symbol (aget o "y")))
 
 (defmethod decode-tagged :default [o]
   (let [[tag val] [(get-tag o) (aget o tag)]]
