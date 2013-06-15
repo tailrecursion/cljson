@@ -41,6 +41,10 @@
   (-encode [o] {"l" (mapv encode o)})
   clojure.lang.PersistentHashSet
   (-encode [o] {"s" (mapv encode o)})
+  java.util.Date
+  (-encode [o] {"inst" (.format (.get @#'clojure.instant/thread-local-utc-date-format) o)})
+  java.util.UUID
+  (-encode [o] {"uuid" (str o)})
   clojure.lang.Keyword
   (-encode [o] {"k" (subs (str o) 1)})
   clojure.lang.Symbol
@@ -48,10 +52,13 @@
   String, Boolean, Long, Double, nil
   (-encode [o] o))
 
-(defn interpret [printed]
-  (when-let [match (re-matches #"#([^<]\S+)\s+(.*)" printed)]
-    (let [[_ tag printed-val] match]
-      {tag (encode (read-string printed-val))})))
+(defn interpret
+  "Attempts to encode an object that does not satisfy EncodeTagged,
+  but for which the printed representation contains a tag."
+  [printed]
+  (when-let [match (second (re-matches #"#([^<].*)" printed))]
+    (let [[tag val] (read-string (str "[" match "]"))]
+      {tag (encode val)})))
 
 (defn encode [x]
   (if (satisfies? EncodeTagged x)
@@ -61,18 +68,18 @@
           (throw (IllegalArgumentException.
                   (format "No cljson encoding for '%s'." printed)))))))
 
-(defmethod decode-tagged "m" [m] (into {} (map decode (get m "m"))))
-(defmethod decode-tagged "l" [m] (apply list (map decode (get m "l"))))
-(defmethod decode-tagged "s" [m] (set (map decode (get m "s"))))
-(defmethod decode-tagged "k" [m] (keyword (get m "k")))
-(defmethod decode-tagged "y" [m] (symbol (get m "y")))
-
-(defmethod decode-tagged :default [m]
-  (let [[tag val] (first m)
-        reader-fn (merge default-data-readers *data-readers*)
-        reader    (or (get reader-fn (symbol tag)) *default-data-reader-fn*)]
-    (if reader (reader (decode val))
-        (throw (Exception. (format "No reader function for tag '%s'." tag))))))
+(defn decode-tagged [o]
+  (let [[tag val] (first o)]
+    (case tag
+      "m" (into {} (map decode val))
+      "l" (apply list (map decode val))
+      "s" (set (map decode val))
+      "k" (keyword val)
+      "y" (apply symbol (.split ^String val "/"))
+      (if-let [reader (or (get (merge default-data-readers *data-readers*) (symbol tag))
+                          *default-data-reader-fn*)]
+        (reader (decode val))
+        (throw (Exception. (format "No reader function for tag '%s'." tag)))))))
 
 (defn decode [v]
   (cond (or (vector? v) (seq? v)) (mapv decode v) (map? v) (decode-tagged v) :else v))
