@@ -46,9 +46,9 @@
   java.util.UUID
   (encode [o] {"uuid" (str o)})
   clojure.lang.Keyword
-  (encode [o] {"k" [(namespace o) (name o)]})
+  (encode [o] {"k" (subs (str o) 1)})
   clojure.lang.Symbol
-  (encode [o] {"y" [(namespace o) (name o)]})
+  (encode [o] {"y" (str o)})
   String, Boolean, Long, Double, nil
   (encode [o] o))
 

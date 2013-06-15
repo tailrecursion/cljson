@@ -8,16 +8,14 @@
 ;; PUBLIC ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defprotocol EncodeTagged
-  "Encode a cljs thing o as a JS tagged literal of the form {tag: value}, where
-  value is composed of JS objects that can be encoded as JSON."
   (-encode [o]))
 
 (def tag-table
   (atom {"m" (into {} (map decode (aget o "m")))
          "l" (apply list (map decode (aget o "l")))
          "s" (set (map decode (aget o "s")))
-         "k" (apply keyword (aget o "k")) 
-         "y" (apply symbol (aget o "y"))}))
+         "k" (keyword (aget o "k")) 
+         "y" (symbol (aget o "y"))}))
 
 (defn clj->cljson
   "Convert clj data to JSON string."
@@ -35,7 +33,7 @@
 (def array?   #(js* "(~{} instanceof Array)" %))
 (def object?  #(js* "(~{} instanceof Object)" %))
 (def en-coll  #(doto (js-obj) (aset %1 (into-array (map encode %2)))))
-(def en-str   #(doto (js-obj) (aset %1 (into-array [(namespace %2) (name %2)]))))
+(def en-str   #(doto (js-obj) (aset %1 %2)))
 
 (defn encode [x]
   (cond (satisfies? EncodeTagged x) (-encode x)
@@ -48,10 +46,11 @@
         (or (string? x) (number? x) (nil? x)) x
         :else (throw (js/Error. (format "No cljson encoding for type '%s'." (type x))))))
 
-
 (defmethod decode-tagged :default [o]
   (let [[tag val] [(get-tag o) (aget o tag)]]
-    (if-let [reader (or (get @reader/tag-table tag) @*default-data-reader-fn*)] 
+    (if-let [reader (or (get tag-table tag)
+                        (get @reader/tag-table tag)
+                        @*default-data-reader-fn*)] 
       (reader (decode val))
       (throw (js/Error. (format "No reader function for tag '%s'." tag))))))
 
