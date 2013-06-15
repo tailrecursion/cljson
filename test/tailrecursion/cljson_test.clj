@@ -40,6 +40,13 @@
     (let [x (collection)]
       (is (= x (-> x clj->cljson cljson->clj))))))
 
+(defrecord Person [name])
+
+(deftest tag-interpretation
+  (let [bob (Person. "Bob")]
+    (binding [*data-readers* {`Person map->Person}]
+      (is (= bob (-> bob clj->cljson cljson->clj))))))
+
 ;;; benchmark
 
 (def bench-colls (take *magic* (repeatedly collection)))

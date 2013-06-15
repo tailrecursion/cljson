@@ -1,7 +1,7 @@
 (ns cljson-test
   (:require [tailrecursion.cljson :refer [clj->cljson cljson->clj]]
             [generators :as g]
-            [cljs.reader :as r]))
+            [cljs.reader :as reader]))
 
 (defn setup! []
   (set! cljs.core/*print-fn*
@@ -19,18 +19,26 @@
               g/number
               g/int
               g/string
-              g/symbol
               g/keyword
+              g/symbol
               ;; todo: uuid, date
               ])
 
 (defn scalar []
   (g/call-through (g/rand-nth scalars)))
 
+(def map-scalars
+  "Because of a mysterious bug in read-string these are the only
+  scalars we put in maps. TODO: investigate."
+  [(constantly nil)
+   g/number
+   g/int
+   g/string])
+
 (def collections
   [[g/vec [scalars]]
    [g/set [scalars]]
-   [g/hash-map [scalars scalars]]
+   [g/hash-map [map-scalars map-scalars]]
    [g/list [scalars]]])
 
 (defn collection
@@ -57,31 +65,40 @@
           z (cljson->clj y)]
       (assert (= x z))))
 
+  (defrecord Person [name])
+
+  (let [bob (Person. "Bob")
+        q (into cljs.core.PersistentQueue/EMPTY [1 2 3])]
+    (swap! reader/*tag-table* assoc "cljson-test.Person" map->Person)
+    (assert (= bob (-> bob clj->cljson cljson->clj)))
+    (assert (= q (-> q clj->cljson cljson->clj))))
+
   ;; benchmark
 
-  (def bench-colls (take *magic* (repeatedly collection)))
-  
+  (def bench-colls (doall (take *magic* (repeatedly collection))))
+
   (println "cljs.core/pr-str")
   (time
    (doseq [c bench-colls]
      (pr-str c)))
 
-  ;; BROKEN because of maps that read-string can't deal with.
-  ;; omit g/hash-map from collections above to test without maps.
-  ;; (println "cljs.reader/read-string")
-  ;; (time
-  ;;  (doseq [c bench-colls]
-  ;;    (r/read-string (pr-str c))))
+  (def pr-decode (mapv pr-str bench-colls))
+  (println "cljs.reader/read-string")
+  (time
+   (doseq [c pr-decode]
+     (reader/read-string c)))
 
   (println "clj->cljson")
   (time
    (doseq [c bench-colls]
      (clj->cljson c)))
 
+  (def to-decode (mapv clj->cljson bench-colls))
+  
   (println "cljson->clj")
   (time
-   (doseq [c bench-colls]
-     (cljson->clj (clj->cljson c))))
+   (doseq [c to-decode]
+     (cljson->clj c)))
 
   (println "Done.")
 

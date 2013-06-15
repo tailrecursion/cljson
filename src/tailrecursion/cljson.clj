@@ -2,11 +2,11 @@
   (:require
    [cheshire.core :refer [generate-string parse-string]]))
 
-(declare decode)
+(declare encode decode)
 
 ;; PUBLIC ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defprotocol EncodeTagged (encode [o]))
+(defprotocol EncodeTagged (-encode [o]))
 (defmulti decode-tagged (comp key first))
 
 (defn clj->cljson
@@ -32,38 +32,55 @@
 (extends-protocol EncodeTagged
   clojure.lang.MapEntry
   clojure.lang.PersistentVector
-  (encode [o] (mapv encode o))
+  (-encode [o] (mapv encode o))
   clojure.lang.PersistentArrayMap
   clojure.lang.PersistentHashMap
-  (encode [o] {"m" (mapv encode o)})
+  (-encode [o] {"m" (mapv encode (apply concat o))})
   clojure.lang.ISeq
   clojure.lang.PersistentList
-  (encode [o] {"l" (mapv encode o)})
+  (-encode [o] {"l" (mapv encode o)})
   clojure.lang.PersistentHashSet
-  (encode [o] {"s" (mapv encode o)})
+  (-encode [o] {"s" (mapv encode o)})
   java.util.Date
-  (encode [o] {"inst" (.format (.get @#'clojure.instant/thread-local-utc-date-format) o)})
+  (-encode [o] {"inst" (.format (.get @#'clojure.instant/thread-local-utc-date-format) o)})
   java.util.UUID
-  (encode [o] {"uuid" (str o)})
+  (-encode [o] {"uuid" (str o)})
   clojure.lang.Keyword
-  (encode [o] {"k" (subs (str o) 1)})
+  (-encode [o] {"k" (subs (str o) 1)})
   clojure.lang.Symbol
-  (encode [o] {"y" (str o)})
+  (-encode [o] {"y" (str o)})
   String, Boolean, Long, Double, nil
-  (encode [o] o))
+  (-encode [o] o))
 
-(defmethod decode-tagged "m" [m] (into {} (map decode (get m "m"))))
-(defmethod decode-tagged "l" [m] (apply list (map decode (get m "l"))))
-(defmethod decode-tagged "s" [m] (set (map decode (get m "s"))))
-(defmethod decode-tagged "k" [m] (keyword (get m "k")))
-(defmethod decode-tagged "y" [m] (symbol (get m "y")))
+(defn interpret
+  "Attempts to encode an object that does not satisfy EncodeTagged,
+  but for which the printed representation contains a tag."
+  [printed]
+  (when-let [match (second (re-matches #"#([^<].*)" printed))]
+    (let [tag (read-string match)
+          val (read-string (subs match (.length (str tag))))]
+      {tag (encode val)})))
 
-(defmethod decode-tagged :default [m]
-  (let [[tag val] (first m)
-        reader-fn (merge default-data-readers *data-readers*)
-        reader    (or (get reader-fn (symbol tag)) *default-data-reader-fn*)]
-    (if reader (reader (decode val))
-        (throw (Exception. (format "No reader function for tag '%s'." tag))))))
+(defn encode [x]
+  (if (satisfies? EncodeTagged x)
+    (-encode x)
+    (let [printed (pr-str x)]
+      (or (interpret printed)
+          (throw (IllegalArgumentException.
+                  (format "No cljson encoding for '%s'." printed)))))))
+
+(defn decode-tagged [o]
+  (let [[tag val] (first o)]
+    (case tag
+      "m" (apply hash-map (map decode val))
+      "l" (apply list (map decode val))
+      "s" (set (map decode val))
+      "k" (keyword val)
+      "y" (apply symbol (.split ^String val "/"))
+      (if-let [reader (or (get (merge default-data-readers *data-readers*) (symbol tag))
+                          *default-data-reader-fn*)]
+        (reader (decode val))
+        (throw (Exception. (format "No reader function for tag '%s'." tag)))))))
 
 (defn decode [v]
   (cond (or (vector? v) (seq? v)) (mapv decode v) (map? v) (decode-tagged v) :else v))

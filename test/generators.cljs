@@ -83,9 +83,8 @@
    sized from sizer."
   ([fk fv] (hash-map fk fv default-sizer))
   ([fk fv sizer]
-     (into {}
-           (zipmap (reps sizer fk)
-                   (reps sizer fv)))))
+     (zipmap (reps sizer fk)
+             (reps sizer fv))))
 
 (defn string
   "Create a string with chars from v and sized from sizer."
