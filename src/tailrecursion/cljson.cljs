@@ -76,9 +76,12 @@
               (recur (inc i) (conj! out (decode (aget val i))))
               (persistent! out)))
       "k" (keyword val)
-      "y" (apply symbol (split val #"/"))
+      "y" (let [idx (.indexOf val "/")]
+            (if (neg? idx)
+              (symbol val)
+              (symbol (.slice val 0 idx) (.slice val (inc idx)))))
       "z" (let [[m v] (decode val)] (with-meta v m))
-      (if-let [reader (or (get @*tag-table* tag) @*default-data-reader-fn*)] 
+      (if-let [reader (or (get @*tag-table* tag) @*default-data-reader-fn*)]
         (reader (decode val))
         (throw (js/Error. (format "No reader function for tag '%s'." tag)))))))
 
