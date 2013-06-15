@@ -5,6 +5,8 @@ as the data transfer format. The cljson library has implementations for Clojure 
 ClojureScript and supports all the data types that ClojureScript supports, including
 tagged literals and metadata.
 
+<img src="https://docs.google.com/a/dipert.org/spreadsheet/oimg?key=0AveuiOwXIG2PdEFRYXo0RV9YTjIwa1lPaDVNSzU1M1E&oid=1&zx=vqnilcwh4nup" />
+
 ## Why?
 
 Parsing [edn](https://github.com/edn-format/edn) with `#'read-string` and
