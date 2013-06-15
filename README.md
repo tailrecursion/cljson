@@ -7,12 +7,6 @@ tagged literals and metadata.
 
 <img src="https://docs.google.com/a/dipert.org/spreadsheet/oimg?key=0AveuiOwXIG2PdEFRYXo0RV9YTjIwa1lPaDVNSzU1M1E&oid=1&zx=vqnilcwh4nup" />
 
-## Why?
-
-Parsing [edn](https://github.com/edn-format/edn) with `#'read-string` and
-stringifying with `#'pr-str` is slow in the browser, but browsers have fast native
-parsers and stringifiers for JSON.
-
 ## Install [![Build Status](https://travis-ci.org/tailrecursion/cljson.png?branch=master)](https://travis-ci.org/tailrecursion/cljson)
 
 Artifacts are published on [Clojars](http://clojars.org/tailrecursion/cljson).
