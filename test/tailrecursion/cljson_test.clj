@@ -47,6 +47,12 @@
     (binding [*data-readers* {`Person map->Person}]
       (is (= bob (-> bob clj->cljson cljson->clj))))))
 
+(deftest meta-roundtrip
+  (let [m {:abc 123}
+        s (with-meta {:x 1} m)]
+    (binding [*print-meta* true]
+      (is (= (meta (cljson->clj (clj->cljson s))) m)))))
+
 ;;; benchmark
 
 (def bench-colls (take *magic* (repeatedly collection)))

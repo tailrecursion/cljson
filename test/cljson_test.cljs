@@ -73,6 +73,11 @@
     (assert (= bob (-> bob clj->cljson cljson->clj)))
     (assert (= q (-> q clj->cljson cljson->clj))))
 
+  (let [m {:abc 123}
+        s (with-meta {:x 1} m)]
+    (binding [*print-meta* true]
+      (assert (= (meta (cljson->clj (clj->cljson s)))))))
+
   ;; benchmark
 
   (def bench-colls (doall (take *magic* (repeatedly collection))))
