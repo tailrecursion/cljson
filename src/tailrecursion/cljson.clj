@@ -21,6 +21,8 @@
 
 ;; INTERNAL ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(def date-format (.get @#'clojure.instant/thread-local-utc-date-format))
+
 (defmacro extends-protocol [protocol & specs]
   (let [class? #(or (symbol? %) (nil? %))]
     `(extend-protocol ~protocol
@@ -30,26 +32,23 @@
              `(~class ~@impls))))))
 
 (extends-protocol EncodeTagged
-  clojure.lang.MapEntry
-  clojure.lang.PersistentVector
+  clojure.lang.IPersistentVector
   (-encode [o] (mapv encode o))
-  clojure.lang.PersistentArrayMap
-  clojure.lang.PersistentHashMap
+  clojure.lang.IPersistentMap
   (-encode [o] {"m" (mapv encode (apply concat o))})
   clojure.lang.ISeq
-  clojure.lang.PersistentList
   (-encode [o] {"l" (mapv encode o)})
-  clojure.lang.PersistentHashSet
+  clojure.lang.IPersistentSet
   (-encode [o] {"s" (mapv encode o)})
   java.util.Date
-  (-encode [o] {"inst" (.format (.get @#'clojure.instant/thread-local-utc-date-format) o)})
+  (-encode [o] {"inst" (.format date-format o)})
   java.util.UUID
   (-encode [o] {"uuid" (str o)})
   clojure.lang.Keyword
   (-encode [o] {"k" (subs (str o) 1)})
   clojure.lang.Symbol
   (-encode [o] {"y" (str o)})
-  String, Boolean, Long, Double, nil
+  String, Boolean, Number, nil
   (-encode [o] o))
 
 (defn interpret
