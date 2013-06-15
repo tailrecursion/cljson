@@ -55,8 +55,8 @@
 (defmethod decode-tagged "m" [m] (into {} (map decode (get m "m"))))
 (defmethod decode-tagged "l" [m] (apply list (map decode (get m "l"))))
 (defmethod decode-tagged "s" [m] (set (map decode (get m "s"))))
-(defmethod decode-tagged "k" [m] (apply keyword (get m "k")))
-(defmethod decode-tagged "y" [m] (apply symbol (get m "y")))
+(defmethod decode-tagged "k" [m] (keyword (get m "k")))
+(defmethod decode-tagged "y" [m] (symbol (get m "y")))
 
 (defmethod decode-tagged :default [m]
   (let [[tag val] (first m)
@@ -66,4 +66,4 @@
         (throw (Exception. (format "No reader function for tag '%s'." tag))))))
 
 (defn decode [v]
-  (cond (seq? v) (mapv decode v) (map? v) (decode-tagged v) :else v))
+  (cond (or (vector? v) (seq? v)) (mapv decode v) (map? v) (decode-tagged v) :else v))
