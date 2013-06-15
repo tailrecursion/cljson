@@ -34,8 +34,8 @@
 
 (defn encode [x]
   (cond (satisfies? EncodeTagged x) (-encode x)
-        (keyword? x) (en-str "k" x)
-        (symbol? x) (en-str "y" x)
+        (keyword? x) (en-str "k" (subs (str x) 1))
+        (symbol? x) (en-str "y" (str x))
         (vector? x) (into-array (map encode x))
         (seq? x) (en-coll "l" x)
         (map? x) (en-coll "m" x)
