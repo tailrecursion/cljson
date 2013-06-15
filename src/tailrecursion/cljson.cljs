@@ -36,16 +36,26 @@
   cljs.core.UUID
   (-encode [o] (doto (js-obj) (aset "uuid" (.-uuid o)))))
 
+(defn interpret
+  "Attempts to encode an object that does not satisfy EncodeTagged,
+  but for which the printed representation contains a tag."
+  [x]
+  (when-let [match (second (re-matches #"#([^<].*)" (pr-str x)))]
+    (let [tag (reader/read-string match)
+          val (reader/read-string (subs match (.-length (str tag))))]
+      (doto (js-obj) (aset (str tag) (encode val))))))
+
 (defn encode [x]
   (cond (satisfies? EncodeTagged x) (-encode x)
         (keyword? x) (en-str "k" (subs (str x) 1))
         (symbol? x) (en-str "y" (str x))
         (vector? x) (into-array (map encode x))
         (seq? x) (en-coll "l" x)
-        (map? x) (en-coll "m" x)
+        (and (map? x) (not (satisfies? cljs.core/IRecord x))) (en-coll "m" x)
         (set? x) (en-coll "s" x)
         (or (string? x) (number? x) (nil? x)) x
-        :else (throw (js/Error. (format "No cljson encoding for type '%s'." (type x))))))
+        :else (or (interpret x)
+                  (throw (js/Error. (format "No cljson encoding for type '%s'." (type x)))))))
 
 (defn decode-tagged [o]
   (let [tag (get-tag o), val (aget o tag)]

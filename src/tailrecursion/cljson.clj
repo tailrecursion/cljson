@@ -57,7 +57,8 @@
   but for which the printed representation contains a tag."
   [printed]
   (when-let [match (second (re-matches #"#([^<].*)" printed))]
-    (let [[tag val] (read-string (str "[" match "]"))]
+    (let [tag (read-string match)
+          val (read-string (subs match (.length (str tag))))]
       {tag (encode val)})))
 
 (defn encode [x]

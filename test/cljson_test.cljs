@@ -1,7 +1,7 @@
 (ns cljson-test
   (:require [tailrecursion.cljson :refer [clj->cljson cljson->clj]]
             [generators :as g]
-            [cljs.reader :as r]))
+            [cljs.reader :as reader]))
 
 (defn setup! []
   (set! cljs.core/*print-fn*
@@ -57,10 +57,18 @@
           z (cljson->clj y)]
       (assert (= x z))))
 
+  (defrecord Person [name])
+
+  (let [bob (Person. "Bob")
+        q (into cljs.core.PersistentQueue/EMPTY [1 2 3])]
+    (swap! reader/*tag-table* assoc "cljson-test.Person" map->Person)
+    (assert (= bob (-> bob clj->cljson cljson->clj)))
+    (assert (= q (-> q clj->cljson cljson->clj))))
+
   ;; benchmark
 
   (def bench-colls (take *magic* (repeatedly collection)))
-  
+
   (println "cljs.core/pr-str")
   (time
    (doseq [c bench-colls]
@@ -71,7 +79,7 @@
   ;; (println "cljs.reader/read-string")
   ;; (time
   ;;  (doseq [c bench-colls]
-  ;;    (r/read-string (pr-str c))))
+  ;;    (reader/read-string (pr-str c))))
 
   (println "clj->cljson")
   (time
