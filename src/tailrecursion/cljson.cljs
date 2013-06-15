@@ -50,7 +50,7 @@
 (defmethod decode-tagged "y" [o] (symbol (aget o "y")))
 
 (defmethod decode-tagged :default [o]
-  (let [[tag val] [(get-tag o) (aget o tag)]]
+  (let [tag (get-tag o), val (aget o tag)]
     (if-let [reader (or (get @*tag-table* tag) @*default-data-reader-fn*)] 
       (reader (decode val))
       (throw (js/Error. (format "No reader function for tag '%s'." tag))))))
