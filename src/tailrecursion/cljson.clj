@@ -6,12 +6,17 @@
 
 ;; PUBLIC ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defprotocol  Encode      (encode [o]))
-(defmulti     decode-tag  (comp key first))
+(defprotocol EncodeTagged (encode [o]))
+(defmulti decode-tagged (comp key first))
 
-(defn clj->cljson "Convert clj data to JSON string." [v]
+(defn clj->cljson
+  "Convert clj data to JSON string."
+  [v]
   (generate-string (encode v) {:escape-non-ascii true}))
-(defn cljson->clj "Convert JSON string to clj data." [s]
+
+(defn cljson->clj
+  "Convert JSON string to clj data."
+  [s]
   (decode (parse-string s)))
 
 ;; INTERNAL ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -24,7 +29,7 @@
                  class classes]
              `(~class ~@impls))))))
 
-(extends-protocol Encode
+(extends-protocol EncodeTagged
   clojure.lang.MapEntry
   clojure.lang.PersistentVector
   (encode [o] (mapv encode o))
@@ -41,19 +46,19 @@
   java.util.UUID
   (encode [o] {"uuid" (str o)})
   clojure.lang.Keyword
-  (encode [o] {"k" (subs (str o) 1)})
+  (encode [o] {"k" [(namespace o) (name o)]})
   clojure.lang.Symbol
-  (encode [o] {"y" (str o)})
+  (encode [o] {"y" [(namespace o) (name o)]})
   String, Boolean, Long, Double, nil
   (encode [o] o))
 
-(defmethod decode-tag "m" [m] (into {} (map decode (get m "m"))))
-(defmethod decode-tag "l" [m] (apply list (map decode (get m "l"))))
-(defmethod decode-tag "s" [m] (set (map decode (get m "s"))))
-(defmethod decode-tag "k" [m] (keyword (get m "k")))
-(defmethod decode-tag "y" [m] (symbol (get m "y")))
+(defmethod decode-tagged "m" [m] (into {} (map decode (get m "m"))))
+(defmethod decode-tagged "l" [m] (apply list (map decode (get m "l"))))
+(defmethod decode-tagged "s" [m] (set (map decode (get m "s"))))
+(defmethod decode-tagged "k" [m] (apply keyword (get m "k")))
+(defmethod decode-tagged "y" [m] (apply symbol (get m "y")))
 
-(defmethod decode-tag :default [m]
+(defmethod decode-tagged :default [m]
   (let [[tag val] (first m)
         reader-fn (merge default-data-readers *data-readers*)
         reader    (or (get reader-fn (symbol tag)) *default-data-reader-fn*)]
@@ -61,8 +66,4 @@
         (throw (Exception. (format "No reader function for tag '%s'." tag))))))
 
 (defn decode [v]
-  (cond (or (seq? v) (vector? v))
-        (mapv decode v)
-        (map? v)
-        (decode-tag v)
-        :else v))
+  (cond (vector? v) (mapv decode v) (map? v) (decode-tagged v) :else v))

@@ -1,67 +1,59 @@
 (ns tailrecursion.cljson
   (:require-macros [tailrecursion.cljson :refer [extends-protocol]])
-  (:require [cljs.reader :as reader :refer [tag-table *default-data-reader-fn*]]
+  (:require [cljs.reader :as reader :refer [*default-data-reader-fn*]]
             [goog.date.DateTime :as date]))
 
 (declare encode decode get-tag)
 
 ;; PUBLIC ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defprotocol Encode (encode [o]))
-(defmulti decode-tag get-tag)
+(defprotocol EncodeTagged
+  "Encode a cljs thing o as a JS tagged literal of the form {tag: value}, where
+  value is composed of JS objects that can be encoded as JSON."
+  (-encode [o]))
 
-(defn clj->cljson "Convert clj data to JSON string." [v] (.stringify js/JSON (encode v)))
-(defn cljson->clj "Convert JSON string to clj data." [s] (decode (.parse js/JSON s)))
+(def tag-table
+  (atom {"m" (into {} (map decode (aget o "m")))
+         "l" (apply list (map decode (aget o "l")))
+         "s" (set (map decode (aget o "s")))
+         "k" (apply keyword (aget o "k")) 
+         "y" (apply symbol (aget o "y"))}))
+
+(defn clj->cljson
+  "Convert clj data to JSON string."
+  [v]
+  (.stringify js/JSON (encode v)))
+
+(defn cljson->clj
+  "Convert JSON string to clj data."
+  [s]
+  (decode (.parse js/JSON s)))
 
 ;; INTERNAL ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def get-tag    #(js* "(function(o){for(var k in o) return k;})(~{})" %))
-(def array?     #(js* "(~{} instanceof Array)" %))
-(def object?    #(js* "(~{} instanceof Object)" %))
-(def str?       #(= "string" (js* "(typeof ~{})" %)))
-(def enc-coll   #(doto (js-obj) (aset %1 (into-array (map encode %2)))))
-(def inst-str   #(date/fromRfc822String (str %)))
-(def decode-str #(let [s (subs % 2)]
-                   (case (first %) \ufdd0 (keyword s) \ufdd1 (symbol s) %)))
+(def get-tag  #(js* "(function(o){for(var k in o) return k;})(~{})" %))
+(def array?   #(js* "(~{} instanceof Array)" %))
+(def object?  #(js* "(~{} instanceof Object)" %))
+(def en-coll  #(doto (js-obj) (aset %1 (into-array (map encode %2)))))
+(def en-str   #(doto (js-obj) (aset %1 (into-array [(namespace %2) (name %2)]))))
 
-(extends-protocol Encode
-  cljs.core.Vector
-  cljs.core.PersistentVector
-  (encode [o] (into-array (map encode o)))
-  cljs.core.PersistentArrayMap
-  cljs.core.PersistentHashMap
-  (encode [o] (enc-coll "m" o))
-  cljs.core.IndexedSeq
-  cljs.core.RSeq
-  cljs.core.List
-  cljs.core.EmptyList
-  cljs.core.Cons
-  cljs.core.LazySeq
-  cljs.core.ChunkedCons
-  cljs.core.ChunkedSeq
-  cljs.core.Range
-  (encode [o] (enc-coll "l" o))
-  cljs.core.PersistentHashSet
-  (encode [o] (enc-coll "s" o))
-  js/Date
-  (encode [o] (doto (js-obj) (.toUTCIsoString (inst-str o))))
-  cljs.core/UUID
-  (encode [o] (doto (js-obj) (aset "uuid" (.-uuid o))))
-  js/String, js/Boolean, js/Number, nil
-  (encode [o] o))
+(defn encode [x]
+  (cond (satisfies? EncodeTagged x) (-encode x)
+        (keyword? x) (en-str "k" x)
+        (symbol? x) (en-str "y" x)
+        (vector? x) (into-array (map encode x))
+        (seq? x) (en-coll "l" x)
+        (map? x) (en-coll "m" x)
+        (set? x) (en-coll "s" x)
+        (or (string? x) (number? x) (nil? x)) x
+        :else (throw (js/Error. (format "No cljson encoding for type '%s'." (type x))))))
 
-(defmethod decode-tag "m" [o] (into {} (map decode (aget o "m"))))
-(defmethod decode-tag "l" [o] (apply list (map decode (aget o "l"))))
-(defmethod decode-tag "s" [o] (set (map decode (aget o "s"))))
 
-(defmethod decode-tag :default [o]
-  (let [[tag val] [(get-tag o) (aget o tag)] 
-        reader    (or (get @tag-table tag) @*default-data-reader-fn*)]
-    (if reader (reader (decode val))
-        (throw (js/Error. (format "No reader function for tag '%s'." tag))))))
+(defmethod decode-tagged :default [o]
+  (let [[tag val] [(get-tag o) (aget o tag)]]
+    (if-let [reader (or (get @reader/tag-table tag) @*default-data-reader-fn*)] 
+      (reader (decode val))
+      (throw (js/Error. (format "No reader function for tag '%s'." tag))))))
 
 (defn decode [v]
-  (cond (str?    v) (decode-str v)
-        (array?  v) (mapv decode v)
-        (object? v) (decode-tag v)
-        :else       v))
+  (cond (array? v) (mapv decode v) (object? v) (decode-tagged v) :else v))
