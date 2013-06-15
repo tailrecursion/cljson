@@ -1,6 +1,10 @@
 (ns tailrecursion.cljson
   (:require-macros [tailrecursion.cljson :refer [extends-protocol]])
+<<<<<<< HEAD
   (:require [cljs.reader :as reader :refer [tag-table *default-data-reader-fn*]]
+=======
+  (:require [cljs.reader :as reader :refer [*default-data-reader-fn*]]
+>>>>>>> b14366ecd12bcc149062771868e7fd63d8d5c5ef
             [goog.date.DateTime :as date]))
 
 (declare encode decode get-tag)
