@@ -74,8 +74,7 @@ Have a look at _cljson.clj_ and _cljson.cljs_ to see examples of this.
 
 ### Metadata
 
-Set `*print-meta*` to `true` inside a `binding` expression to have metadata
-included in the JSON output.
+Bind `*print-meta*` to `true` to have metadata included in the JSON output.
 
 ## License
 
