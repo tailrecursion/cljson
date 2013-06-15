@@ -31,13 +31,16 @@
              `(~class ~@impls))))))
 
 (extends-protocol EncodeTagged
-  clojure.lang.IPersistentVector
+  clojure.lang.MapEntry
+  clojure.lang.PersistentVector
   (-encode [o] (mapv encode o))
-  clojure.lang.IPersistentMap
+  clojure.lang.PersistentArrayMap
+  clojure.lang.PersistentHashMap
   (-encode [o] {"m" (mapv encode (apply concat o))})
   clojure.lang.ISeq
+  clojure.lang.PersistentList
   (-encode [o] {"l" (mapv encode o)})
-  clojure.lang.IPersistentSet
+  clojure.lang.PersistentHashSet
   (-encode [o] {"s" (mapv encode o)})
   java.util.Date
   (-encode [o] {"inst" (.format date-format o)})
