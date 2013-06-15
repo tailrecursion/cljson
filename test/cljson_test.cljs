@@ -82,8 +82,6 @@
    (doseq [c bench-colls]
      (pr-str c)))
 
-  ;; BROKEN because of maps that read-string can't deal with.
-  ;; omit g/hash-map from collections above to test without maps.
   (def pr-decode (mapv pr-str bench-colls))
   (println "cljs.reader/read-string")
   (time
