@@ -46,17 +46,19 @@
       (doto (js-obj) (aset (str tag) (encode val))))))
 
 (defn encode [x]
-  (cond (satisfies? EncodeTagged x) (-encode x)
-        (keyword? x) (en-str "k" (subs (str x) 1))
-        (symbol? x) (en-str "y" (str x))
-        (vector? x) (into-array (map encode x))
-        (seq? x) (en-coll "l" x)
-        (and (map? x) (not (satisfies? cljs.core/IRecord x)))
+  (if-let [m (and *print-meta* (meta x))]
+    (doto (js-obj) (aset "z" (into-array [(encode m) (encode (with-meta x nil))])))
+    (cond (satisfies? EncodeTagged x) (-encode x)
+          (keyword? x) (en-str "k" (subs (str x) 1))
+          (symbol? x) (en-str "y" (str x))
+          (vector? x) (into-array (map encode x))
+          (seq? x) (en-coll "l" x)
+          (and (map? x) (not (satisfies? cljs.core/IRecord x)))
           (doto (js-obj) (aset "m" (into-array (map encode (apply concat x)))))
-        (set? x) (en-coll "s" x)
-        (or (string? x) (number? x) (nil? x)) x
-        :else (or (interpret x)
-                  (throw (js/Error. (format "No cljson encoding for type '%s'." (type x)))))))
+          (set? x) (en-coll "s" x)
+          (or (string? x) (number? x) (nil? x)) x
+          :else (or (interpret x)
+                    (throw (js/Error. (format "No cljson encoding for type '%s'." (type x))))))))
 
 (defn decode-tagged [o]
   (let [tag (get-tag o), val (aget o tag)]
@@ -75,6 +77,7 @@
               (persistent! out)))
       "k" (keyword val)
       "y" (apply symbol (split val #"/"))
+      "z" (let [[m v] (decode val)] (with-meta v m))
       (if-let [reader (or (get @*tag-table* tag) @*default-data-reader-fn*)] 
         (reader (decode val))
         (throw (js/Error. (format "No reader function for tag '%s'." tag)))))))

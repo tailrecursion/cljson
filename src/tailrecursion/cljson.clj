@@ -63,12 +63,14 @@
       {tag (encode val)})))
 
 (defn encode [x]
-  (if (satisfies? EncodeTagged x)
-    (-encode x)
-    (let [printed (pr-str x)]
-      (or (interpret printed)
-          (throw (IllegalArgumentException.
-                  (format "No cljson encoding for '%s'." printed)))))))
+  (if-let [m (and *print-meta* (meta x))] 
+    {"z" [(encode m) (encode (with-meta x nil))]}
+    (if (satisfies? EncodeTagged x)
+      (-encode x)
+      (let [printed (pr-str x)]
+        (or (interpret printed)
+            (throw (IllegalArgumentException.
+                     (format "No cljson encoding for '%s'." printed))))))))
 
 (defn decode-tagged [o]
   (let [[tag val] (first o)]
@@ -78,6 +80,7 @@
       "s" (set (map decode val))
       "k" (keyword val)
       "y" (symbol val)
+      "z" (let [[m v] (decode val)] (with-meta v m))
       (if-let [reader (or (get (merge default-data-readers *data-readers*) (symbol tag))
                           *default-data-reader-fn*)]
         (reader (decode val))
