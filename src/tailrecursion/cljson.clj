@@ -74,7 +74,7 @@
       "l" (apply list (map decode val))
       "s" (set (map decode val))
       "k" (keyword val)
-      "y" (apply symbol (.split ^String val "/"))
+      "y" (symbol val)
       (if-let [reader (or (get (merge default-data-readers *data-readers*) (symbol tag))
                           *default-data-reader-fn*)]
         (reader (decode val))
