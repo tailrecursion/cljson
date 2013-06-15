@@ -80,41 +80,58 @@
 
   ;; benchmark
 
-  (def bench-colls (doall (take *magic* (repeatedly collection))))
+  (def bench-colls (into-array (take *magic* (repeatedly collection))))
 
   (println "cljs.core/pr-str")
   (time
-   (doseq [c bench-colls]
-     (pr-str c)))
+   (do (.profile js/console "cljs.core/pr-str")
+       (loop [i 0]
+         (when (< i *magic*)
+           (pr-str (aget bench-colls i))
+           (recur (inc i))))
+       (.profileEnd js/console)))
 
-  (def pr-decode (mapv pr-str bench-colls))
+  (def pr-colls (into-array (map pr-str bench-colls)))
   (println "cljs.reader/read-string")
   (time
-   (doseq [c pr-decode]
-     (reader/read-string c)))
+   (do (.profile js/console "cljs.reader/read-string")
+       (loop [i 0]
+         (when (< i *magic*)
+           (reader/read-string (aget pr-colls i))
+           (recur (inc i))))
+       (.profileEnd js/console)))
 
   (println "clj->cljson")
   (time
-   (doseq [c bench-colls]
-     (clj->cljson c)))
+   (do (.profile js/console "clj->cljson")
+       (loop [i 0]
+         (when (< i *magic*)
+           (clj->cljson (aget bench-colls i))
+           (recur (inc i))))
+       (.profileEnd js/console)))
 
-  (def to-decode (mapv clj->cljson bench-colls))
-  
+  (def cljson-colls (into-array (map clj->cljson bench-colls)))
   (println "cljson->clj")
   (time
-   (doseq [c to-decode]
-     (cljson->clj c)))
+   (do (.profile js/console "cljson->clj")
+       (loop [i 0]
+         (when (< i *magic*)
+           (cljson->clj (aget cljson-colls i))
+           (recur (inc i))))
+       (.profileEnd js/console)))
 
-  (def to-stringify (mapv #(.parse js/JSON %) to-decode))
+  (def stringify-colls (into-array (map #(.parse js/JSON %) cljson-colls)))
   (println "JSON/stringify (no encode)")
-  (time
-   (doseq [c to-stringify]
-     (.stringify js/JSON c)))
+  (time (loop [i 0]
+          (when (< i *magic*)
+            (.stringify js/JSON (aget stringify-colls i))
+            (recur (inc i)))))
 
   (println "JSON/parse (no decode)")
-  (time
-   (doseq [c to-decode]
-     (.parse js/JSON c)))
+  (time (loop [i 0]
+          (when (< i *magic*)
+            (.parse js/JSON (aget cljson-colls i))
+            (recur (inc i)))))
 
   (println "Done.")
 
