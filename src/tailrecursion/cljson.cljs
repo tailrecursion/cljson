@@ -30,7 +30,11 @@
 (def en-str   #(doto (js-obj) (aset %1 %2)))
 (def en-coll  #(doto (js-obj) (aset %1 (into-array (map encode %2)))))
 
-(defmulti decode-tagged get-tag)
+(extend-protocol EncodeTagged
+  js/Date
+  (-encode [o] (doto (js-obj) (aset "inst" (subs (pr-str o) 7 36))))
+  cljs.core.UUID
+  (-encode [o] (doto (js-obj) (aset "uuid" (.-uuid o)))))
 
 (defn encode [x]
   (cond (satisfies? EncodeTagged x) (-encode x)
