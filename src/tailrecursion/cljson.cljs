@@ -36,23 +36,43 @@
   cljs.core.UUID
   (-encode [o] (doto (js-obj) (aset "uuid" (.-uuid o)))))
 
+(defn interpret
+  "Attempts to encode an object that does not satisfy EncodeTagged,
+  but for which the printed representation contains a tag."
+  [x]
+  (when-let [match (second (re-matches #"#([^<].*)" (pr-str x)))]
+    (let [tag (reader/read-string match)
+          val (reader/read-string (subs match (.-length (str tag))))]
+      (doto (js-obj) (aset (str tag) (encode val))))))
+
 (defn encode [x]
   (cond (satisfies? EncodeTagged x) (-encode x)
         (keyword? x) (en-str "k" (subs (str x) 1))
         (symbol? x) (en-str "y" (str x))
         (vector? x) (into-array (map encode x))
         (seq? x) (en-coll "l" x)
-        (map? x) (en-coll "m" x)
+        (and (map? x) (not (satisfies? cljs.core/IRecord x)))
+          (doto (js-obj) (aset "m" (into-array (map encode (apply concat x)))))
         (set? x) (en-coll "s" x)
         (or (string? x) (number? x) (nil? x)) x
-        :else (throw (js/Error. (format "No cljson encoding for type '%s'." (type x))))))
+        :else (or (interpret x)
+                  (throw (js/Error. (format "No cljson encoding for type '%s'." (type x)))))))
 
 (defn decode-tagged [o]
   (let [tag (get-tag o), val (aget o tag)]
     (case tag
-      "m" (into {} (map decode val))
-      "l" (apply list (map decode val))
-      "s" (set (map decode val))
+      "m" (loop [i 0, out (transient {})]
+            (if (< i (alength val))
+              (recur (+ i 2) (assoc! out (decode (aget val i)) (decode (aget val (inc i)))))
+              (persistent! out)))
+      "l" (loop [i (dec (alength val)), out ()]
+            (if (neg? i)
+              out
+              (recur (dec i) (conj out (decode (aget val i))))))
+      "s" (loop [i 0, out (transient #{})]
+            (if (< i (alength val))
+              (recur (inc i) (conj! out (decode (aget val i))))
+              (persistent! out)))
       "k" (keyword val)
       "y" (apply symbol (split val #"/"))
       (if-let [reader (or (get @*tag-table* tag) @*default-data-reader-fn*)] 
@@ -60,4 +80,11 @@
         (throw (js/Error. (format "No reader function for tag '%s'." tag)))))))
 
 (defn decode [v]
-  (cond (array? v) (mapv decode v) (object? v) (decode-tagged v) :else v))
+  (cond (array? v)
+        (loop [i 0, out (transient [])]
+          (if (< i (alength v))
+            (recur (inc i) (conj! out (decode (aget v i))))
+            (persistent! out)))
+        (object? v)
+        (decode-tagged v)
+        :else v))
