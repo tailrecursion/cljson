@@ -43,17 +43,17 @@
         (or (string? x) (number? x) (nil? x)) x
         :else (throw (js/Error. (format "No cljson encoding for type '%s'." (type x))))))
 
-(defmethod decode-tagged "m" [o] (into {} (map decode (aget o "m"))))
-(defmethod decode-tagged "l" [o] (apply list (map decode (aget o "l"))))
-(defmethod decode-tagged "s" [o] (set (map decode (aget o "s"))))
-(defmethod decode-tagged "k" [o] (keyword (aget o "k")))
-(defmethod decode-tagged "y" [o] (apply symbol (split (aget o "y") #"/")))
-
-(defmethod decode-tagged :default [o]
+(defn decode-tagged [o]
   (let [tag (get-tag o), val (aget o tag)]
-    (if-let [reader (or (get @*tag-table* tag) @*default-data-reader-fn*)] 
-      (reader (decode val))
-      (throw (js/Error. (format "No reader function for tag '%s'." tag))))))
+    (case tag
+      "m" (into {} (map decode val))
+      "l" (apply list (map decode val))
+      "s" (set (map decode val))
+      "k" (keyword val)
+      "y" (apply symbol (split val #"/"))
+      (if-let [reader (or (get @*tag-table* tag) @*default-data-reader-fn*)] 
+        (reader (decode val))
+        (throw (js/Error. (format "No reader function for tag '%s'." tag)))))))
 
 (defn decode [v]
   (cond (array? v) (mapv decode v) (object? v) (decode-tagged v) :else v))
