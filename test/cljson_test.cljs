@@ -49,6 +49,9 @@
 
 (def ^:dynamic *magic* 1000)
 
+(defn ^:export err [x y z]
+  (js/Error. (format "\nx: %s,\ny: %s,\nz: %s.\n" (pr-str x) (pr-str y) (pr-str z))))
+
 (defn ^:export start []
 
   (setup!)
@@ -57,26 +60,31 @@
     (let [x (scalar)
           y (clj->cljson x)
           z (cljson->clj y)]
-      (assert (= x z))))
+      (when-not (= x z) (throw (err x y z)))))
 
   (dotimes [_ *magic*]
     (let [x (collection)
           y (clj->cljson x)
           z (cljson->clj y)]
-      (assert (= x z))))
+      (when-not (= x z) (throw (err x y z)))))
 
   (defrecord Person [name])
+  (swap! reader/*tag-table* assoc "cljson-test.Person" map->Person)
 
-  (let [bob (Person. "Bob")
-        q (into cljs.core.PersistentQueue/EMPTY [1 2 3])]
-    (swap! reader/*tag-table* assoc "cljson-test.Person" map->Person)
-    (assert (= bob (-> bob clj->cljson cljson->clj)))
-    (assert (= q (-> q clj->cljson cljson->clj))))
+  (let [x (Person. "Bob")
+        y (clj->cljson x)
+        z (cljson->clj y)]
+    (when-not (= x z) (throw (err x y z))))
 
-  (let [m {:abc 123}
-        s (with-meta {:x 1} m)]
-    (binding [*print-meta* true]
-      (assert (= (meta (cljson->clj (clj->cljson s))) m))))
+  (let [x (into cljs.core.PersistentQueue/EMPTY [1 2 3])
+        y (clj->cljson x)
+        z (cljson->clj y)]
+    (when-not (= x z) (throw (err x y z))))
+
+  (let [x (with-meta {:x 1} {:abc 123})
+        y (binding [*print-meta* true] (clj->cljson x))
+        z (cljson->clj y)]
+    (when-not (= (meta x) (meta z)) (throw (err x y z))))
 
   ;; benchmark
 
