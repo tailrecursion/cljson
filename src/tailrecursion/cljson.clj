@@ -20,8 +20,6 @@
 
 ;; INTERNAL ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def date-format (.get @#'clojure.instant/thread-local-utc-date-format))
-
 (defmacro extends-protocol [protocol & specs]
   (let [class? #(or (symbol? %) (nil? %))]
     `(extend-protocol ~protocol
@@ -30,77 +28,86 @@
                  class classes]
              `(~class ~@impls))))))
 
+(defn enc [s coll]
+  (let [elems (mapcat encode coll)]
+    (cons (+ s (count elems)) elems)))
+
 (extends-protocol EncodeTagged
-  clojure.lang.MapEntry
-  clojure.lang.PersistentVector
-  (-encode [o] (list* "\ufdd0" (count o) (mapcat encode o)))
-  clojure.lang.PersistentArrayMap
-  clojure.lang.PersistentHashMap
-  (-encode [o] (list* "\ufdd1" (count o) (mapcat encode o)))
   clojure.lang.ISeq
   clojure.lang.PersistentList
-  (-encode [o] (list* "\ufdd2" (count o) (mapcat encode o)))
-  clojure.lang.PersistentHashSet
-  (-encode [o] (list* "\ufdd3" (count o) (mapcat encode o)))
-  clojure.lang.Keyword
-  (-encode [o] (list "\ufdd4" 1 (subs (str o) 1)))
-  clojure.lang.Symbol
-  (-encode [o] (list "\ufdd5" 1 (str o)))
+  (-encode [o] (into ["l"] (enc 2 o)))
+  clojure.lang.MapEntry
+  clojure.lang.PersistentVector
+  (-encode [o] (into ["v"] (enc 2 o)))
+  clojure.lang.PersistentArrayMap
+  clojure.lang.PersistentHashMap
+  (-encode [o] (into ["m"] (enc 2 o)))
   String, Boolean, Number, nil
-  (-encode [o] [o])
-  java.util.Date
-  (-encode [o] (list "\ufdd6" 2 "inst" (.format date-format o)))
-  java.util.UUID
-  (-encode [o] (list "\ufdd6" 2 "uuid" (str o))))
-
-(defn interpret
-  "Attempts to encode an object that does not satisfy EncodeTagged,
-  but for which the printed representation contains a tag."
-  [printed]
-  (when-let [match (second (re-matches #"#([^<].*)" printed))]
-    (let [tag (read-string match)
-          val (read-string (subs match (.length (str tag))))]
-      (list* "\ufdd6" 2 tag (encode val)))))
+  (-encode [o] ["s" 3 o]))
 
 (defn encode [x]
-  (if (satisfies? EncodeTagged x)
-    (-encode x)
-    (let [printed (pr-str x)]
-      (or (interpret printed)
-          (throw (IllegalArgumentException.
-                  (format "No cljson encoding for '%s'." printed)))))))
+  (-encode x))
 
-(def tags #{"\ufdd0" "\ufdd1" "\ufdd2" "\ufdd3" "\ufdd4" "\ufdd5" "\ufdd6" "\ufdd7"})
+(def tags #{"l" "v" "m" "s"})
 
-(defn decode-coll [v out]
-  (loop [n (first v) more (rest v) out (transient out)]
-    (if (zero? n)
-      (persistent! out)
-      (if (tags (first more))
-        (recur (dec n)
-               (drop (+ 2 (second more)) more)
-               (conj! out (decode more)))
-        (recur (dec n) (rest more) (conj! out (first more)))))))
+(defn decode
+  ([start end v]
+     (case (get v start)
+       ;; scalars
+       "s" (get v (+ start 2))
+       ;; vectors
+       "v" (if (= 2 (get v (inc start)))
+             []
+             (let [content-start (+ 2 start)
+                   content-end   (+ content-start (- (get v 1) 2))]
+               (loop [elem-start content-start, out []]
+                 (let [elem-end (+ elem-start (get v (inc elem-start)))]
+                   (if (= elem-end content-end)
+                     (conj out (decode elem-start elem-end v))
+                     (recur elem-end (conj out (decode elem-start elem-end v))))))))))
+  ([v] (decode 0 (count v) v)))
 
-(defn decode [[tag? & more]]
-  (if-let [tag (tags tag?)]
-    (case tag
-      "\ufdd0" (decode-coll more [])
-      "\ufdd1" (decode-coll more {})
-      "\ufdd2" (apply list (decode-coll more []))
-      "\ufdd3" (decode-coll more #{})
-      "\ufdd4" (keyword (second more))
-      "\ufdd5" (symbol (second more))
-      "\ufdd6" (let [[_ edn-tag & val] more]
-                 (if-let [reader (or (get (merge default-data-readers *data-readers*)
-                                          (symbol edn-tag))
-                                     *default-data-reader-fn*)]
-                   (reader (decode val))
-                   (throw (Exception. (format "No reader function for tag '%s'." edn-tag)))))
-      ) 
-    tag?))
+;; (defn decode-coll [ out]
+;;   (loop [n (first v) more (rest v) out (transient out)]
+;;     (if (zero? n)
+;;       (persistent! out)
+;;       (recur (dec n) (drop (+ 2 (second more)) more) (conj! out (decode more))))))
+
+;; (defn decode [[tag & [n & content]]]
+;;   (if (tags tag)
+;;     (case tag
+;;       "XXfdd1" (loop [cnt n, more content, out []]
+;;                  (if (zero? n)
+;;                    out
+;;                    (recur (dec cnt) ))))
+;;     tag))
+
+;; (defn decode-coll [v out]
+;;   (loop [n (first v) more (rest v) out (transient out)]
+;;     (if (zero? n)
+;;       (persistent! out)
+;;       (recur (dec n) (drop (+ 2 (second more)) more) (conj! out (decode more))))))
+
+;; (defn decode [[tag? & more]]
+;;   (if-let [tag (tags tag?)]
+;;     (case tag
+;;       "XXfdd0" (decode-coll more [])
+;;       "XXfdd1" (decode-coll more {})
+;;       "XXfdd2" (apply list (decode-coll more []))
+;;       "XXfdd3" (decode-coll more #{})
+;;       "XXfdd4" (keyword (second more))
+;;       "XXfdd5" (symbol (second more))
+;;       "XXfdd6" (let [[_ edn-tag & val] more]
+;;                  (if-let [reader (or (get (merge default-data-readers *data-readers*)
+;;                                           (symbol edn-tag))
+;;                                      *default-data-reader-fn*)]
+;;                    (reader (decode val))
+;;                    (throw (Exception. (format "No reader function for tag '%s'." edn-tag)))))
+;;       "XXfdd7" (second more)) 
+;;     tag?))
 
 (comment
+  {9060365806611651666 :C5TLcAU8, 1459932648456178208 :Nb_MlUoHyyLNw0g256Lm8rpKGyOiI0E99oNN-PKWNLAo3kMZ}
   (encode [1 [2] [3 [4]]]) ;=> ("﷐" 3 1 "﷐" 1 2 "﷐" 2 3 "﷐" 1 4)
   (decode (encode [1 [2] [3 [4]]])) ;=> [1 [2] [3 [4]]]
   )
