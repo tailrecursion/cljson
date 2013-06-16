@@ -81,12 +81,14 @@
               (persistent! out)))
       "m" (loop [i 1, len (alength o), out (transient {})]
             (if (< i len)
-              (recur (+ i 2) len (assoc! out (decode (aget val i)) (decode (aget val (inc i)))))
+              (recur (+ i 2) len (assoc! out (decode (aget o i)) (decode (aget o (inc i)))))
               (persistent! out)))
-      "l" (rest o) 
+      "l" (loop [i (dec (alength o)), out ()]
+            (if (pos? i) (recur (dec i) (conj out (decode (aget o i)))) out))
       "s" (loop [i 1, len (alength o), out (transient #{})]
             (if (< i len)
-              (recur (inc i) len (conj! out (decode (aget o i))))))
+              (recur (inc i) len (conj! out (decode (aget o i))))
+              (persistent! out)))
       "k" (keyword (aget o 1))
       "y" (let [val (aget o 1)
                 idx (.indexOf val "/")]
