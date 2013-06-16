@@ -83,42 +83,42 @@
   (def bench-colls (into-array (take *magic* (repeatedly collection))))
 
   (println "cljs.core/pr-str")
+  (.profile js/console "cljs.core/pr-str")
   (time
-   (do (.profile js/console "cljs.core/pr-str")
-       (loop [i 0]
-         (when (< i *magic*)
-           (pr-str (aget bench-colls i))
-           (recur (inc i))))
-       (.profileEnd js/console)))
+   (loop [i 0]
+     (when (< i *magic*)
+       (pr-str (aget bench-colls i))
+       (recur (inc i)))))
+  (.profileEnd js/console)
 
   (def pr-colls (into-array (map pr-str bench-colls)))
   (println "cljs.reader/read-string")
+  (.profile js/console "cljs.reader/read-string")
   (time
-   (do (.profile js/console "cljs.reader/read-string")
-       (loop [i 0]
-         (when (< i *magic*)
-           (reader/read-string (aget pr-colls i))
-           (recur (inc i))))
-       (.profileEnd js/console)))
+   (loop [i 0]
+     (when (< i *magic*)
+       (reader/read-string (aget pr-colls i))
+       (recur (inc i)))))
+  (.profileEnd js/console)
 
   (println "clj->cljson")
+  (.profile js/console "clj->cljson")
   (time
-   (do (.profile js/console "clj->cljson")
-       (loop [i 0]
-         (when (< i *magic*)
-           (clj->cljson (aget bench-colls i))
-           (recur (inc i))))
-       (.profileEnd js/console)))
+   (loop [i 0]
+     (when (< i *magic*)
+       (clj->cljson (aget bench-colls i))
+       (recur (inc i)))))
+  (.profileEnd js/console)
 
   (def cljson-colls (into-array (map clj->cljson bench-colls)))
   (println "cljson->clj")
+  (.profile js/console "cljson->clj")
   (time
-   (do (.profile js/console "cljson->clj")
-       (loop [i 0]
-         (when (< i *magic*)
-           (cljson->clj (aget cljson-colls i))
-           (recur (inc i))))
-       (.profileEnd js/console)))
+   (loop [i 0]
+     (when (< i *magic*)
+       (cljson->clj (aget cljson-colls i))
+       (recur (inc i)))))
+  (.profileEnd js/console)
 
   (def stringify-colls (into-array (map #(.parse js/JSON %) cljson-colls)))
   (println "JSON/stringify (no encode)")
