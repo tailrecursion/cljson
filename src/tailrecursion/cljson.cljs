@@ -71,10 +71,8 @@
             (if (neg? i)
               out
               (recur (dec i) (conj out (decode (aget val i))))))
-      "s" (loop [i 0, out (transient #{})]
-            (if (< i (alength val))
-              (recur (inc i) (conj! out (decode (aget val i))))
-              (persistent! out)))
+      "s" (persistent!
+           (areduce val i out (transient #{}) (conj! out (decode (aget val i)))))
       "k" (keyword val)
       "y" (let [idx (.indexOf val "/")]
             (if (neg? idx)
@@ -87,10 +85,8 @@
 
 (defn decode [v]
   (cond (array? v)
-        (loop [i 0, out (transient [])]
-          (if (< i (alength v))
-            (recur (inc i) (conj! out (decode (aget v i))))
-            (persistent! out)))
+        (persistent!
+         (areduce v i out (transient []) (conj! out (decode (aget v i)))))
         (object? v)
         (decode-tagged v)
         :else v))
