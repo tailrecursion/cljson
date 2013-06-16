@@ -19,7 +19,7 @@
 (def collections
   [[g/vec [scalars]]
    [g/set [scalars]]
-   [g/hash-map [scalars scalars]]
+;   [g/hash-map [scalars scalars]]
    [g/list [scalars]]])
 
 (defn collection
@@ -40,18 +40,18 @@
     (let [x (collection)]
       (is (= x (-> x clj->cljson cljson->clj))))))
 
-(defrecord Person [name])
+;; (defrecord Person [name])
 
-(deftest tag-interpretation
-  (let [bob (Person. "Bob")]
-    (binding [*data-readers* {`Person map->Person}]
-      (is (= bob (-> bob clj->cljson cljson->clj))))))
+;; (deftest tag-interpretation
+;;   (let [bob (Person. "Bob")]
+;;     (binding [*data-readers* {`Person map->Person}]
+;;       (is (= bob (-> bob clj->cljson cljson->clj))))))
 
-(deftest meta-roundtrip
-  (let [m {:abc 123}
-        s (with-meta {:x 1} m)]
-    (binding [*print-meta* true]
-      (is (= (meta (cljson->clj (clj->cljson s))) m)))))
+;; (deftest meta-roundtrip
+;;   (let [m {:abc 123}
+;;         s (with-meta {:x 1} m)]
+;;     (binding [*print-meta* true]
+;;       (is (= (meta (cljson->clj (clj->cljson s))) m)))))
 
 ;;; benchmark
 
