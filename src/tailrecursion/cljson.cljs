@@ -58,29 +58,30 @@
           :else (or (interpret x)
                     (throw (js/Error. (format "No cljson encoding for type '%s'." (type x))))))))
 
-(defn decode-tagged [[tag val]]
-  (case tag
-    "v" (persistent!
-         (areduce val i out (transient []) (conj! out (decode (aget val i)))))
-    "m" (loop [i 0, out (transient {})]
-          (if (< i (alength val))
-            (recur (+ i 2) (assoc! out (decode (aget val i)) (decode (aget val (inc i)))))
-            (persistent! out)))
-    "l" (loop [i (dec (alength val)), out ()]
-          (if (neg? i)
-            out
-            (recur (dec i) (conj out (decode (aget val i))))))
-    "s" (persistent!
-         (areduce val i out (transient #{}) (conj! out (decode (aget val i)))))
-    "k" (keyword val)
-    "y" (let [idx (.indexOf val "/")]
-          (if (neg? idx)
-            (symbol val)
-            (symbol (.slice val 0 idx) (.slice val (inc idx)))))
-    "z" (let [[m v] (map decode val)] (with-meta v m))
-    (if-let [reader (or (get @*tag-table* tag) @*default-data-reader-fn*)]
-      (reader (decode val))
-      (throw (js/Error. (format "No reader function for tag '%s'." tag))))))
+(defn decode-tagged [o]
+  (let [tag (aget o 0), val (aget o 1)]
+    (case tag
+      "v" (persistent!
+           (areduce val i out (transient []) (conj! out (decode (aget val i)))))
+      "m" (loop [i 0, out (transient {})]
+            (if (< i (alength val))
+              (recur (+ i 2) (assoc! out (decode (aget val i)) (decode (aget val (inc i)))))
+              (persistent! out)))
+      "l" (loop [i (dec (alength val)), out ()]
+            (if (neg? i)
+              out
+              (recur (dec i) (conj out (decode (aget val i))))))
+      "s" (persistent!
+           (areduce val i out (transient #{}) (conj! out (decode (aget val i)))))
+      "k" (keyword val)
+      "y" (let [idx (.indexOf val "/")]
+            (if (neg? idx)
+              (symbol val)
+              (symbol (.slice val 0 idx) (.slice val (inc idx)))))
+      "z" (let [[m v] (map decode val)] (with-meta v m))
+      (if-let [reader (or (get @*tag-table* tag) @*default-data-reader-fn*)]
+        (reader (decode val))
+        (throw (js/Error. (format "No reader function for tag '%s'." tag)))))))
 
 (defn decode [v]
   (if (array? v) (decode-tagged v) v))
