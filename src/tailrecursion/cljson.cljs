@@ -25,8 +25,7 @@
 
 ;; INTERNAL ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def object?  #(js* "(~{} instanceof Object)" %))
-(def enc      #(doto (array) (aset 0 %1) (aset 1 %2)))
+(def enc #(doto (array) (aset 0 %1) (aset 1 %2)))
 
 (extend-protocol EncodeTagged
   js/Date
