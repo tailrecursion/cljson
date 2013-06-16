@@ -33,58 +33,46 @@
 (extends-protocol EncodeTagged
   clojure.lang.MapEntry
   clojure.lang.PersistentVector
-  (-encode [o] ["v" (mapv encode o)])
-  clojure.lang.PersistentArrayMap
-  clojure.lang.PersistentHashMap
-  (-encode [o] ["m" (mapv encode (apply concat o))])
-  clojure.lang.ISeq
-  clojure.lang.PersistentList
-  (-encode [o] ["l" (mapv encode o)])
-  clojure.lang.PersistentHashSet
-  (-encode [o] ["s" (mapv encode o)])
-  java.util.Date
-  (-encode [o] ["inst" (.format date-format o)])
-  java.util.UUID
-  (-encode [o] ["uuid" (str o)])
-  clojure.lang.Keyword
-  (-encode [o] ["k" (subs (str o) 1)])
-  clojure.lang.Symbol
-  (-encode [o] ["y" (str o)])
+  (-encode [o] (list* "\ufdd0" (count o) (apply concat (map encode o))))
+  ;; clojure.lang.PersistentArrayMap
+  ;; clojure.lang.PersistentHashMap
+  ;; (-encode [o] (list* "\ufdd1" (* 2 (count o)) (map encode (apply concat o))))
+  ;; clojure.lang.ISeq
+  ;; clojure.lang.PersistentList
+  ;; (-encode [o] (list* "\ufdd2" (count o) (map encode o)))
+  ;; clojure.lang.PersistentHashSet
+  ;; (-encode [o] (list* "\ufdd3" (count o) (map encode o)))
+  ;; java.util.Date
+  ;; (-encode [o] (list "\ufdd4" 2 "inst" (.format date-format o)))
+  ;; java.util.UUID
+  ;; (-encode [o] (list "\ufdd4" 2 "uuid" (str o)))
+  ;; clojure.lang.Keyword
+  ;; (-encode [o] (list "\ufdd5" 1 (subs (str o) 1)))
+  ;; clojure.lang.Symbol
+  ;; (-encode [o] (list "\ufdd6" 1 (str o)))
   String, Boolean, Number, nil
-  (-encode [o] o))
-
-(defn interpret
-  "Attempts to encode an object that does not satisfy EncodeTagged,
-  but for which the printed representation contains a tag."
-  [printed]
-  (when-let [match (second (re-matches #"#([^<].*)" printed))]
-    (let [tag (read-string match)
-          val (read-string (subs match (.length (str tag))))]
-      [tag (encode val)])))
+  (-encode [o] [o]))
 
 (defn encode [x]
-  (if-let [m (and *print-meta* (meta x))] 
-    ["z" [(encode m) (encode (with-meta x nil))]]
-    (if (satisfies? EncodeTagged x)
-      (-encode x)
-      (let [printed (pr-str x)]
-        (or (interpret printed)
-            (throw (IllegalArgumentException.
-                     (format "No cljson encoding for '%s'." printed))))))))
+  (-encode x))
 
-(defn decode-tagged [[tag val]]
-  (case tag
-    "v" (mapv decode val)
-    "m" (apply hash-map (map decode val))
-    "l" (apply list (map decode val))
-    "s" (set (map decode val))
-    "k" (keyword val)
-    "y" (symbol val)
-    "z" (let [[m v] (map decode val)] (with-meta v m))
-    (if-let [reader (or (get (merge default-data-readers *data-readers*) (symbol tag))
-                        *default-data-reader-fn*)]
-      (reader (decode val))
-      (throw (Exception. (format "No reader function for tag '%s'." tag))))))
+(def tags #{"\ufdd0" ;; "\ufdd1" "\ufdd2" "\ufdd3" "\ufdd4" "\ufdd5" "\ufdd6"
+            })
 
 (defn decode [v]
-  (if (sequential? v) (decode-tagged v) v))
+  (if-let [tag (tags (first v))]
+    (case tag
+      "\ufdd0" (loop [n (second v) more (nnext v) out (transient [])]
+                 (if (zero? n)
+                   (persistent! out)
+                   (if-let [tag2 (tags (first more))]
+                     (recur (dec n) (drop (+ 2 (second more)) more)
+                            (conj! out (decode more)))
+                     (recur (dec n) (rest more) (conj! out (first more)))))))
+    (first v)))
+
+(comment
+  (encode [1 [2] [3 [4]]]) ;=> ("﷐" 3 1 "﷐" 1 2 "﷐" 2 3 "﷐" 1 4)
+  (decode (encode [1 [2] [3 [4]]])) ;=> [1 [2] [3 [4]]]
+  )
+
