@@ -25,16 +25,9 @@
 
 ;; INTERNAL ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn enc-atom
-  ([tag val] 
-   (doto (make-array 2) (aset 0 tag) (aset 1 val)))
-  ([tag val1 val2]
-   (doto (make-array 3) (aset 0 tag) (aset 1 val1) (aset 2 val2))))
-
 (defn enc-coll [tag val]
   (let [len (count val)
-        out (make-array (inc len))]
-    (aset out 0 tag)
+        out (array tag)]
     (loop [i 0, c val]
       (if (< i len)
         (let [i (inc i)]
@@ -44,9 +37,9 @@
 
 (extend-protocol EncodeTagged
   js/Date
-  (-encode [o] (enc-atom "inst" (subs (pr-str o) 7 36)))
+  (-encode [o] (array "inst" (subs (pr-str o) 7 36)))
   cljs.core.UUID
-  (-encode [o] (enc-atom "uuid" (.-uuid o))))
+  (-encode [o] (array "uuid" (.-uuid o))))
 
 (defn interpret
   "Attempts to encode an object that does not satisfy EncodeTagged,
@@ -55,14 +48,14 @@
   (when-let [match (second (re-matches #"#([^<].*)" (pr-str x)))]
     (let [tag (reader/read-string match)
           val (reader/read-string (subs match (.-length (str tag))))]
-      (enc-atom (str tag) (encode val)))))
+      (array (str tag) (encode val)))))
 
 (defn encode [x]
   (if-let [m (and *print-meta* (meta x))]
-    (enc-atom "z" (encode m) (encode (with-meta x nil)))
+    (array "z" (encode m) (encode (with-meta x nil)))
     (cond (satisfies? EncodeTagged x) (-encode x)
-          (keyword? x) (enc-atom "k" (subs (str x) 1))
-          (symbol? x) (enc-atom "y" (str x))
+          (keyword? x) (array "k" (subs (str x) 1))
+          (symbol? x) (array "y" (str x))
           (vector? x) (enc-coll "v" (map encode x))
           (seq? x) (enc-coll "l" (map encode x))
           (and (map? x) (not (satisfies? cljs.core/IRecord x)))
