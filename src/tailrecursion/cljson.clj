@@ -30,7 +30,7 @@
             \ufdd6  :set
             \ufdd7  :tagged})
 
-(def tags (map-invert types))
+(def tags (into {} (map (fn [[k v]] [v (str k)]) types)))
 
 (def date-format (.get @#'clojure.instant/thread-local-utc-date-format))
 
@@ -81,14 +81,14 @@
   String, Boolean, Number, nil
   (-encode [x v] (encode-native! v x)))
 
-(defn interpret
+(defn interpret!
   "Attempts to encode an object that does not satisfy EncodeTagged,
   but for which the printed representation contains a tag."
-  [printed]
+  [printed v]
   (when-let [match (second (re-matches #"#([^<].*)" printed))]
     (let [tag (read-string match)
           val (read-string (subs match (.length (str tag))))]
-      [tag (encode val)])))
+      (encode-tagged! tag v val))))
 
 (defn encode! [x v]
   (if-let [m (and *print-meta* (meta x))]
@@ -97,8 +97,10 @@
       (encode! (with-meta x nil))) 
     (if (satisfies? EncodeTagged x)
       (-encode x v)
-      :not-implemented
-      )))
+      (let [printed (pr-str x)]
+        (or (interpret! printed v)
+            (throw (IllegalArgumentException.
+                     (format "No cljson encoding for '%s'." printed))))))))
 
 (defn decode-collection! [v coll]
   (let [len (second @v)]
@@ -109,7 +111,7 @@
 
 (defn decode! [v]
   (let [tag (first @v)]
-    (case (types tag) 
+    (case (and (string? tag) (types (first tag))) 
       :meta     (do (swap! v rest) (let [m (decode! v)] (with-meta (decode! v) m)))
       :keyword  (let [out (keyword (second @v))] (swap! v (partial drop 2)) out) 
       :symbol   (let [out (symbol (second @v))] (swap! v (partial drop 2)) out) 

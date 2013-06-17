@@ -1,5 +1,6 @@
 (ns tailrecursion.cljson-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.tools.reader.edn :as e]
+            [clojure.test :refer :all]
             [cheshire.core :refer [generate-string parse-string]]
             [tailrecursion.cljson :refer [encode decode clj->cljson cljson->clj]]
             [clojure.data.generators :as g])
@@ -80,8 +81,8 @@
   (let [x (atom nil)]
     (println "clojure.core/pr-str") 
     (reset! x (time (mapv #(doall (pr-str %)) bench-colls)))
-    (println "clojure.core/read-string") 
-    (time (mapv #(doall (read-string %)) @x))))
+    (println "clojure.tools.reader.edn/read-string") 
+    (time (mapv #(doall (e/read-string %)) @x))))
 
 (deftest cljson-perf
   (let [x (atom nil)]
