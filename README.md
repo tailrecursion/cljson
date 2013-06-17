@@ -5,7 +5,7 @@ as the data transfer format. The cljson library has implementations for Clojure 
 ClojureScript and supports all the data types that ClojureScript supports, including
 tagged literals and metadata.
 
-<img src="https://docs.google.com/a/dipert.org/spreadsheet/oimg?key=0AveuiOwXIG2PdEFRYXo0RV9YTjIwa1lPaDVNSzU1M1E&oid=1&zx=vqnilcwh4nup" />
+<img src="https://docs.google.com/a/thefreshdiet.com/spreadsheet/oimg?key=0AveuiOwXIG2PdEFRYXo0RV9YTjIwa1lPaDVNSzU1M1E&oid=4&zx=p8i57tifyupr" />
 
 ## Install [![Build Status](https://travis-ci.org/tailrecursion/cljson.png?branch=master)](https://travis-ci.org/tailrecursion/cljson)
 
