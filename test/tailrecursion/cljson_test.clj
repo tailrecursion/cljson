@@ -75,23 +75,23 @@
 
 ;;; benchmark
 
-(def bench-colls (take 1 (repeatedly #(deep-collection 28 4))))
+(def bench-colls (deep-collection 36 4))
 
 (deftest native-perf
   (let [x (atom nil)]
     (println "clojure.core/pr-str") 
-    (reset! x (time (mapv #(doall (pr-str %)) bench-colls)))
+    (reset! x (time (doall (pr-str bench-colls))))
     (println "clojure.tools.reader.edn/read-string") 
-    (time (mapv #(doall (e/read-string %)) @x))))
+    (time (doall (e/read-string @x)))))
 
 (deftest cljson-perf
   (let [x (atom nil)]
     (println "clj->cljson")
-    (reset! x (time (mapv #(doall (clj->cljson %)) bench-colls))) 
+    (reset! x (time (doall (clj->cljson bench-colls))))
     (println "cljson->clj") 
-    (time (mapv cljson->clj @x))
-    (let [x (atom (mapv #(doall (encode %)) bench-colls))]
+    (time (cljson->clj @x))
+    (let [x (atom (doall (encode bench-colls)))]
       (println "generate-string")
-      (reset! x (time (mapv #(doall (generate-string %)) @x)))
+      (reset! x (time (doall (generate-string @x))))
       (println "parse-string")
-      (time (mapv #(doall (parse-string %)) @x)))))
+      (time (doall (parse-string @x))))))
