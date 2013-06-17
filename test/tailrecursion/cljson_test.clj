@@ -74,7 +74,7 @@
 
 ;;; benchmark
 
-(def bench-colls (take *magic* (repeatedly collection)))
+(def bench-colls (take 1 (repeatedly #(deep-collection 28 3))))
 
 (deftest native-perf
   (let [x (atom nil)]

@@ -35,6 +35,9 @@
    g/int
    g/string])
 
+(defn map-scalar []
+  (g/call-through (g/rand-nth map-scalars)))
+
 (def collections
   [[g/vec [scalars]]
    [g/set [scalars]]
@@ -47,7 +50,21 @@
   (let [[coll args] (g/rand-nth collections)]
     (apply coll (map g/rand-nth args))))
 
-(def ^:dynamic *magic* 1000)
+(defn deep-collection
+  ([breadth depth]
+   (deep-collection breadth depth 0))
+  ([breadth depth nparents] 
+   (let [base  (g/rand-nth [{} [] #{} ()])
+         pcoll (/ (- depth nparents) depth)
+         pscal (- 1 pcoll)
+         ncoll (if (pos? pcoll) (g/geometric (/ 1 (* pcoll breadth))) 0) 
+         nscal (if (pos? pscal) (g/geometric (/ 1 (* pscal breadth))) 0)
+         colls (for [_ (range ncoll)] (deep-collection breadth depth (inc nparents)))
+         scals (for [_ (range nscal)] (if (map? base) (map-scalar) (scalar)))
+         items (g/shuffle (concat colls scals))]
+     (into base (if (map? base) (map (partial apply vector) (partition 2 items)) items)))))
+
+(def ^:dynamic *magic* 1)
 
 (defn ^:export err [x y z]
   (js/Error. (format "\nx: %s,\ny: %s,\nz: %s.\n" (pr-str x) (pr-str y) (pr-str z))))
@@ -88,9 +105,11 @@
 
   ;; benchmark
 
-  (def bench-colls (into-array (take *magic* (repeatedly collection))))
+  (print "making colls")
+  (def bench-colls (into-array (take *magic* (repeatedly #(deep-collection 28 3)))))
+  (print "done making colls")
 
-  (println "cljs.core/pr-str")
+  (print "cljs.core/pr-str")
   (.profile js/console "cljs.core/pr-str")
   (time
    (loop [i 0]
@@ -100,7 +119,7 @@
   (.profileEnd js/console)
 
   (def pr-colls (into-array (map pr-str bench-colls)))
-  (println "cljs.reader/read-string")
+  (print "cljs.reader/read-string")
   (.profile js/console "cljs.reader/read-string")
   (time
    (loop [i 0]
@@ -109,7 +128,7 @@
        (recur (inc i)))))
   (.profileEnd js/console)
 
-  (println "clj->cljson")
+  (print "clj->cljson")
   (.profile js/console "clj->cljson")
   (time
    (loop [i 0]
@@ -119,7 +138,7 @@
   (.profileEnd js/console)
 
   (def cljson-colls (into-array (map clj->cljson bench-colls)))
-  (println "cljson->clj")
+  (print "cljson->clj")
   (.profile js/console "cljson->clj")
   (time
    (loop [i 0]
@@ -129,18 +148,18 @@
   (.profileEnd js/console)
 
   (def stringify-colls (into-array (map #(.parse js/JSON %) cljson-colls)))
-  (println "JSON/stringify (no encode)")
+  (print "JSON/stringify (no encode)")
   (time (loop [i 0]
           (when (< i *magic*)
             (.stringify js/JSON (aget stringify-colls i))
             (recur (inc i)))))
 
-  (println "JSON/parse (no decode)")
+  (print "JSON/parse (no decode)")
   (time (loop [i 0]
           (when (< i *magic*)
             (.parse js/JSON (aget cljson-colls i))
             (recur (inc i)))))
 
-  (println "Done.")
+  (print "Done.")
 
   )

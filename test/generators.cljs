@@ -1,5 +1,5 @@
 (ns generators
-  (:refer-clojure :exclude [rand-nth int char list vec set hash-map name symbol keyword]))
+  (:refer-clojure :exclude [rand-nth int char list vec set hash-map name symbol keyword shuffle]))
 
 (.call (aget js/Math "seedrandom") js/Math "42")
 
@@ -127,5 +127,21 @@
   "Create a non-namespaced keyword sized from sizer."
   ([] (keyword default-sizer))
   ([sizer] (cljs.core/keyword (name sizer))))
+
+(defn fisher-yates
+  [coll]
+  (let [as (into-array coll)]
+    (loop [i (dec (alength as))]
+      (if (< 1 i)
+        (let [j (uniform 0 (inc i))
+              t (aget as i)]
+          (aset as i (aget as j))
+          (aset as j t)
+          (recur (dec i)))
+        (into (empty coll) (seq as))))))
+
+(defn shuffle
+  [coll]
+  (fisher-yates coll))
 
 ;;; TODO: uuid, date
