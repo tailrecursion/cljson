@@ -32,16 +32,22 @@
 
 (defn deep-collection
   ([breadth depth]
-   (deep-collection breadth depth 0))
-  ([breadth depth nparents] 
+   (let [s (atom 0)
+         c (atom 0)
+         v (deep-collection breadth depth 0 s c)]
+     (with-meta v {:collections @c :scalars @s})))
+  ([breadth depth nparents nscalars ncollections] 
    (let [pcoll (/ (- depth nparents) depth)
          pscal (- 1 pcoll)
          ncoll (if (pos? pcoll) (g/geometric (/ 1 (* pcoll breadth))) 0) 
          nscal (if (pos? pscal) (g/geometric (/ 1 (* pscal breadth))) 0)
-         colls (for [_ (range ncoll)] (deep-collection breadth depth (inc nparents)))
+         colls (for [_ (range ncoll)]
+                 (deep-collection breadth depth (inc nparents) nscalars ncollections))
          scals (for [_ (range nscal)] (scalar))
          items (g/shuffle (concat colls scals))
          base  (g/rand-nth [{} [] #{} ()])]
+     (swap! nscalars + nscal)
+     (swap! ncollections + ncoll)
      (into base (if (map? base) (map (partial apply vector) (partition 2 items)) items)))))
 
 (def ^:dynamic *magic* 1000)
@@ -75,7 +81,12 @@
 
 ;;; benchmark
 
-(def bench-colls (deep-collection 14 6))
+(def breadth      10)
+(def depth        5)
+(def bench-colls  (deep-collection breadth depth))
+
+(let [{c :collections s :scalars} (meta bench-colls)]
+  (printf "Deep collection %d x %d: %d collections and %d scalars.\n" breadth depth c s)) 
 
 (deftest native-perf
   (let [x (atom nil)]
