@@ -1,5 +1,6 @@
 (ns tailrecursion.cljson-test
   (:require [clojure.test :refer :all]
+            [criterium.core :refer [bench]]
             [tailrecursion.cljson :refer [clj->cljson cljson->clj]]
             [clojure.data.generators :as g])
   (:refer-clojure :exclude [list]))
@@ -27,6 +28,20 @@
   []
   (let [[coll args] (g/rand-nth collections)]
     (apply coll (map g/rand-nth args))))
+
+(defn deep-collection
+  ([breadth depth]
+   (deep-collection breadth depth 0))
+  ([breadth depth nparents] 
+   (let [pcoll (/ (- depth nparents) depth)
+         pscal (- 1 pcoll)
+         ncoll (if (pos? pcoll) (g/geometric (/ 1 (* pcoll breadth))) 0) 
+         nscal (if (pos? pscal) (g/geometric (/ 1 (* pscal breadth))) 0)
+         colls (for [_ (range ncoll)] (deep-collection breadth depth (inc nparents)))
+         scals (for [_ (range nscal)] (scalar))
+         items (g/shuffle (concat colls scals))
+         base  (g/rand-nth [{} [] #{} ()])]
+     (into base (if (map? base) (map (partial apply vector) (partition 2 items)) items)))))
 
 (def ^:dynamic *magic* 1000)
 
