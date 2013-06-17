@@ -1,6 +1,5 @@
 (ns tailrecursion.cljson-test
   (:require [clojure.test :refer :all]
-            [criterium.core :refer [bench]]
             [tailrecursion.cljson :refer [clj->cljson cljson->clj]]
             [clojure.data.generators :as g])
   (:refer-clojure :exclude [list]))
@@ -67,6 +66,10 @@
         s (with-meta {:x 1} m)]
     (binding [*print-meta* true]
       (is (= (meta (cljson->clj (clj->cljson s))) m)))))
+
+(deftest nested-perf
+  (let [x (deep-collection 10 4)]
+    (is (= x (-> x clj->cljson cljson->clj)))))
 
 ;;; benchmark
 
