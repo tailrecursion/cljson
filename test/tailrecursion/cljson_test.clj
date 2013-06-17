@@ -1,6 +1,7 @@
 (ns tailrecursion.cljson-test
   (:require [clojure.test :refer :all]
-            [tailrecursion.cljson :refer [clj->cljson cljson->clj]]
+            [cheshire.core :refer [generate-string parse-string]]
+            [tailrecursion.cljson :refer [encode decode clj->cljson cljson->clj]]
             [clojure.data.generators :as g])
   (:refer-clojure :exclude [list]))
 
@@ -73,18 +74,23 @@
 
 ;;; benchmark
 
-(def bench-colls (take 10 (repeatedly #(deep-collection 10 4))))
+(def bench-colls (take *magic* (repeatedly collection)))
 
 (deftest native-perf
   (let [x (atom nil)]
     (println "clojure.core/pr-str") 
-    (reset! x (time (mapv pr-str bench-colls)))
+    (reset! x (time (mapv #(doall (pr-str %)) bench-colls)))
     (println "clojure.core/read-string") 
-    (reset! x (time (mapv read-string @x)))))
+    (time (mapv #(doall (read-string %)) @x))))
 
 (deftest cljson-perf
   (let [x (atom nil)]
     (println "clj->cljson")
-    (reset! x (time (mapv clj->cljson bench-colls))) 
+    (reset! x (time (mapv #(doall (clj->cljson %)) bench-colls))) 
     (println "cljson->clj") 
-    (reset! x (time (mapv cljson->clj @x)))))
+    (time (mapv cljson->clj @x))
+    (let [x (atom (mapv #(doall (encode %)) bench-colls))]
+      (println "generate-string")
+      (reset! x (time (mapv #(doall (generate-string %)) @x)))
+      (println "parse-string")
+      (time (mapv #(doall (parse-string %)) @x)))))
