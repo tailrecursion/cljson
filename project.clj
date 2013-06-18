@@ -17,5 +17,6 @@
                 :jar false}
                :debug
                {:source-paths ["test"]
-                :compiler {:output-to "test/test.js"}
+                :compiler {:output-to "test/test.js"
+                           :optimizations :whitespace}
                 :jar false}}})
