@@ -21,14 +21,14 @@
 
 ;; INTERNAL ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def types {\ufdd0  :keyword
-            \ufdd1  :symbol
-            \ufdd2  :meta
-            \ufdd3  :vector
-            \ufdd4  :map
-            \ufdd5  :list
-            \ufdd6  :set
-            \ufdd7  :tagged})
+(def types {\ufdd1  :keyword
+            \ufdd2  :symbol
+            \ufdd3  :meta
+            \ufdd4  :vector
+            \ufdd5  :map
+            \ufdd6  :list
+            \ufdd7  :set
+            \ufdd8  :tagged})
 
 (def tags (into {} (map (fn [[k v]] [v (str k)]) types)))
 
