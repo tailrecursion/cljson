@@ -1,4 +1,4 @@
-(defproject tailrecursion/cljson "0.1.0-SNAPSHOT"
+(defproject tailrecursion/cljson "1.0.0"
   :description "Fast data exchange format for between Clojure and ClojureScript"
   :url "https://github.com/tailrecursion/cljson"
   :license {:name "Eclipse Public License"
