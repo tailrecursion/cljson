@@ -146,6 +146,5 @@
 
   (print "JSON/parse (no decode)")
   (time (.parse js/JSON cljson-colls))
-  (print "Done.")
 
   )
