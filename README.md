@@ -31,26 +31,33 @@ There are two functions exported by this library: `clj->cljson` and `cljson->clj
 They convert Clojure data to and from JSON strings.
 
 ```clojure
-user=> (use 'tailrecursion.cljson)
+user=> (require '[tailrecursion.cljson :refer [clj->cljson cljson->clj]])
 nil
 
 user=> (clj->cljson [1 2 3])
-"[1,2,3]"
+"[\"v\",1,2,3]"
 
-user=> (cljson->clj "[1,2,3]")
+user=> (cljson->clj "[\"v\",1,2,3]")
 [1 2 3]
 
 user=> (clj->cljson '(1 2 3))
-"{\"l\":[1,2,3]}"
+"[\"l\",1,2,3]"
 
-user=> (cljson->clj "{\"l\":[1,2,3]}")
+user=> (cljson->clj "[\"l\",1,2,3]")
 (1 2 3)
 
-user=> (clj->cljson {[1 2 3] :foo 'bar #{"bar"}})
-"{\"m\":[[1,2,3],{\"k\":\"foo\"},{\"y\":\"bar\"},{\"s\":[\"bar\"]}]}"
+user=> (clj->cljson [(java.util.Date.) {[1 2 3] :foo 'bar #{"bar"}}])
+"[\"v\",[\"inst\",\"2013-06-24T17:34:04.183-00:00\"],[\"m\",[\"v\",1,2,3],[\"k\",\"foo\"],[\"y\",\"bar\"],[\"s\",\"bar\"]]]"
 
-user=> (cljson->clj "{\"m\":[[1,2,3],{\"k\":\"foo\"},{\"y\":\"bar\"},{\"s\":[\"bar\"]}]}")
-{[1 2 3] :foo, bar #{"bar"}}
+user=> (cljson->clj "[\"v\",[\"inst\",\"2013-06-24T17:34:04.183-00:00\"],[\"m\",[\"v\",1,2,3],[\"k\",\"foo\"],[\"y\",\"bar\"],[\"s\",\"bar\"]]]")
+[#inst "2013-06-24T17:34:04.183-00:00" {[1 2 3] :foo, bar #{"bar"}}]
+
+user> (defrecord Person [name])
+user.Person
+user> (clj->cljson (Person. "Bob"))
+"[\"user.Person\",[\"m\",[\"k\",\"name\"],\"Bob\"]]"
+user> (binding [*data-readers* {'user.Person map->Person}] (cljson->clj "[\"user.Person\",[\"m\",[\"k\",\"name\"],\"Bob\"]]"))
+#user.Person{:name "Bob"}
 ```
 
 ### Tagged Literals
