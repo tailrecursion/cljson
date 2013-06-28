@@ -33,23 +33,23 @@
 (extends-protocol EncodeTagged
   clojure.lang.MapEntry
   clojure.lang.PersistentVector
-  (-encode [o] (into ["\ufdd0"] (map encode o)))
+  (-encode [o] (into ["v"] (map encode o)))
   clojure.lang.PersistentArrayMap
   clojure.lang.PersistentHashMap
-  (-encode [o] (into ["\ufdd1"] (map encode (apply concat o))))
+  (-encode [o] (into ["m"] (map encode (apply concat o))))
   clojure.lang.ISeq
   clojure.lang.PersistentList
-  (-encode [o] (into ["\ufdd2"] (map encode o)))
+  (-encode [o] (into ["l"] (map encode o)))
   clojure.lang.PersistentHashSet
-  (-encode [o] (into ["\ufdd3"] (mapv encode o)))
+  (-encode [o] (into ["s"] (mapv encode o)))
   java.util.Date
   (-encode [o] ["inst" (.format date-format o)])
   java.util.UUID
   (-encode [o] ["uuid" (str o)])
   clojure.lang.Keyword
-  (-encode [o] ["\ufdd4" (subs (str o) 1)])
+  (-encode [o] ["k" (subs (str o) 1)])
   clojure.lang.Symbol
-  (-encode [o] ["\ufdd5" (str o)])
+  (-encode [o] ["y" (str o)])
   String, Boolean, Number, nil
   (-encode [o] o))
 
@@ -63,8 +63,8 @@
       [tag (encode val)])))
 
 (defn encode [x]
-  (if-let [m (and *print-meta* (meta x))]
-    ["\ufdd6" (encode m) (encode (with-meta x nil))]
+  (if-let [m (and *print-meta* (meta x))] 
+    ["z" (encode m) (encode (with-meta x nil))]
     (if (satisfies? EncodeTagged x)
       (-encode x)
       (let [printed (pr-str x)]
@@ -74,13 +74,13 @@
 
 (defn decode-tagged [[tag & val]]
   (case tag
-    "\ufdd0" (mapv decode val)
-    "\ufdd1" (apply hash-map (map decode val))
-    "\ufdd2" (apply list (map decode val))
-    "\ufdd3" (set (map decode val))
-    "\ufdd4" (keyword (first val))
-    "\ufdd5" (symbol (first val))
-    "\ufdd6" (let [[m v] (map decode val)] (with-meta v m))
+    "v" (mapv decode val)
+    "m" (apply hash-map (map decode val))
+    "l" (apply list (map decode val))
+    "s" (set (map decode val))
+    "k" (keyword (first val))
+    "y" (symbol (first val))
+    "z" (let [[m v] (map decode val)] (with-meta v m))
     (if-let [reader (or (get (merge default-data-readers *data-readers*) (symbol tag))
                         *default-data-reader-fn*)]
       (reader (decode (first val)))

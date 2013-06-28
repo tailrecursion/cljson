@@ -52,15 +52,15 @@
 
 (defn encode [x]
   (if-let [m (and *print-meta* (meta x))]
-    (array "\ufdd6" (encode m) (encode (with-meta x nil)))
+    (array "z" (encode m) (encode (with-meta x nil)))
     (cond (satisfies? EncodeTagged x) (-encode x)
-          (keyword? x) (array "\ufdd4" (subs (str x) 1))
-          (symbol? x) (array "\ufdd5" (str x))
-          (vector? x) (enc-coll "\ufdd0" (map encode x))
-          (seq? x) (enc-coll "\ufdd2" (map encode x))
+          (keyword? x) (array "k" (subs (str x) 1))
+          (symbol? x) (array "y" (str x))
+          (vector? x) (enc-coll "v" (map encode x))
+          (seq? x) (enc-coll "l" (map encode x))
           (and (map? x) (not (satisfies? cljs.core/IRecord x)))
-          (enc-coll "\ufdd1" (map encode (apply concat x)))
-          (set? x) (enc-coll "\ufdd3" (map encode x))
+          (enc-coll "m" (map encode (apply concat x)))
+          (set? x) (enc-coll "s" (map encode x))
           (or (string? x) (number? x) (nil? x)) x
           :else (or (interpret x)
                     (throw (js/Error. (format "No cljson encoding for type '%s'." (type x))))))))
@@ -68,27 +68,27 @@
 (defn decode-tagged [o]
   (let [tag (aget o 0)]
     (case tag
-      "\ufdd0" (loop [i 1, len (alength o), out (transient [])]
-                 (if (< i len)
-                   (recur (inc i) len (conj! out (decode (aget o i)))) 
-                   (persistent! out)))
-      "\ufdd1" (loop [i 1, len (alength o), out (transient {})]
-                 (if (< i len)
-                   (recur (+ i 2) len (assoc! out (decode (aget o i)) (decode (aget o (inc i)))))
-                   (persistent! out)))
-      "\ufdd2" (loop [i (dec (alength o)), out ()]
-                 (if (pos? i) (recur (dec i) (conj out (decode (aget o i)))) out))
-      "\ufdd3" (loop [i 1, len (alength o), out (transient #{})]
-                 (if (< i len)
-                   (recur (inc i) len (conj! out (decode (aget o i))))
-                   (persistent! out)))
-      "\ufdd4" (keyword (aget o 1))
-      "\ufdd5" (let [val (aget o 1)
-                     idx (.indexOf val "/")]
-                 (if (neg? idx)
-                   (symbol val)
-                   (symbol (.slice val 0 idx) (.slice val (inc idx)))))
-      "\ufdd6" (let [m (decode (aget o 1)), v (decode (aget o 2))] (with-meta v m))
+      "v" (loop [i 1, len (alength o), out (transient [])]
+            (if (< i len)
+              (recur (inc i) len (conj! out (decode (aget o i)))) 
+              (persistent! out)))
+      "m" (loop [i 1, len (alength o), out (transient {})]
+            (if (< i len)
+              (recur (+ i 2) len (assoc! out (decode (aget o i)) (decode (aget o (inc i)))))
+              (persistent! out)))
+      "l" (loop [i (dec (alength o)), out ()]
+            (if (pos? i) (recur (dec i) (conj out (decode (aget o i)))) out))
+      "s" (loop [i 1, len (alength o), out (transient #{})]
+            (if (< i len)
+              (recur (inc i) len (conj! out (decode (aget o i))))
+              (persistent! out)))
+      "k" (keyword (aget o 1))
+      "y" (let [val (aget o 1)
+                idx (.indexOf val "/")]
+            (if (neg? idx)
+              (symbol val)
+              (symbol (.slice val 0 idx) (.slice val (inc idx)))))
+      "z" (let [m (decode (aget o 1)), v (decode (aget o 2))] (with-meta v m))
       (if-let [reader (or (get @*tag-table* tag) @*default-data-reader-fn*)]
         (reader (decode (aget o 1)))
         (throw (js/Error. (format "No reader function for tag '%s'." tag)))))))
