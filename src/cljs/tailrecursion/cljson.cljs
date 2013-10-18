@@ -63,7 +63,7 @@
           (set? x) (enc-coll "s" (map encode x))
           (or (string? x) (number? x) (nil? x)) x
           :else (or (interpret x)
-                    (throw (js/Error. (format "No cljson encoding for type '%s'." (type x))))))))
+                    (throw (js/Error. (str "No cljson encoding for type '" (type x) "'.")))))))
 
 (defn decode-tagged [o]
   (let [tag (aget o 0)]
@@ -91,7 +91,7 @@
       "z" (let [m (decode (aget o 1)), v (decode (aget o 2))] (with-meta v m))
       (if-let [reader (or (get @*tag-table* tag) @*default-data-reader-fn*)]
         (reader (decode (aget o 1)))
-        (throw (js/Error. (format "No reader function for tag '%s'." tag)))))))
+        (throw (js/Error. (str "No reader function for tag '" tag "'.")))))))
 
 (defn decode [v]
   (if (array? v) (decode-tagged v) v))

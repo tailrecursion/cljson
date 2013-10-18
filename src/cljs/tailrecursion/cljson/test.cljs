@@ -75,7 +75,7 @@
 (def ^:dynamic *magic* 1)
 
 (defn ^:export err [x y z]
-  (js/Error. (format "\nx: %s,\ny: %s,\nz: %s.\n" (pr-str x) (pr-str y) (pr-str z))))
+  (js/Error. (str "\nx: " (pr-str x) ",\ny: " (pr-str y) ",\nz: " (pr-str z) ".\n")))
 
 (defn ^:export start []
 
@@ -101,7 +101,7 @@
         z (cljson->clj y)]
     (when-not (= x z) (throw (err x y z))))
 
-  (let [x (into cljs.core.PersistentQueue/EMPTY [1 2 3])
+  (let [x (into cljs.core.PersistentQueue.EMPTY [1 2 3])
         y (clj->cljson x)
         z (cljson->clj y)]
     (when-not (= x z) (throw (err x y z))))
@@ -118,7 +118,7 @@
   (def bench-colls  (deep-collection breadth depth))
 
   (let [{c :collections s :scalars} (meta bench-colls)]
-    (printf "Deep collection %d x %d: %d collections and %d scalars.\n" breadth depth c s)) 
+    (print (str "Deep collection " breadth " x " depth ": " c " collections and " s " scalars.\n")))
 
   (print "cljs.core/pr-str")
   (.profile js/console "cljs.core/pr-str")

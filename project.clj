@@ -1,4 +1,4 @@
-(defproject tailrecursion/cljson "1.0.3"
+(defproject tailrecursion/cljson "1.0.4"
   :description "Fast data exchange format for between Clojure and ClojureScript"
   :url "https://github.com/tailrecursion/cljson"
   :license {:name "Eclipse Public License"
@@ -7,7 +7,8 @@
   :source-paths ["src/clj"]
   :repl-options {:init-ns tailrecursion.cljson}
   :plugins [[lein-cljsbuild "0.3.4"]]
-  :profiles {:test {:dependencies [[org.clojure/clojure "1.5.1"]
+  :profiles {:devz {:dependencies [[org.clojure/clojurescript "0.0-1934"]]}
+             :test {:dependencies [[org.clojure/clojure "1.5.1"]
                                    [org.clojure/data.generators "0.1.2"]
                                    [org.clojure/tools.reader "0.7.9"]]}}
   :cljsbuild {:test-commands {"unit" ["test/run.sh"]}
