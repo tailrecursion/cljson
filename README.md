@@ -13,7 +13,7 @@ Artifacts are published on [Clojars](http://clojars.org/tailrecursion/cljson).
 
 Leiningen:
 ```clojure
-[tailrecursion/cljson "1.0.2"]
+[tailrecursion/cljson "1.0.3"]
 ```
 
 Maven:
@@ -21,7 +21,7 @@ Maven:
 <dependency>
   <groupId>tailrecursion</groupId>
   <artifactId>cljson</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.3</version>
 </dependency>
 ```
 

@@ -1,6 +1,5 @@
 (ns tailrecursion.cljson
-  (:require
-   [cheshire.core :refer [generate-string parse-string]]))
+  (:require [cheshire.core :refer [generate-string parse-string]]))
 
 (declare encode decode)
 

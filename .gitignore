@@ -16,3 +16,4 @@ pom.xml.asc
 *.swp
 /test/test.js
 /test/firefox-profile
+/.nrepl-port
