@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+set -e
+
+lein with-profile testz cljsbuild clean
+lein with-profile testz cljsbuild test
+./test/run.sh
