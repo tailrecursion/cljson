@@ -8,4 +8,4 @@ install:
 	lein with-profile deployz install
 
 push:
-	./script/push
+	./script/push $(version) $(message)
