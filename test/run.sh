@@ -9,11 +9,10 @@ run_phantom() {
 
 run_ff() {
     firefox -version
-    this_tty=$(tty)
     xvfb-run -a firefox -profile test/firefox-profile -no-remote "test/test.html" \
     | while read line; do
         if [ "$line" = "Done." ]; then
-            kill -n 2 $(ps -t $this_tty | grep firefox | awk '{print $1}')
+            killall -SIGINT firefox
             echo "All tests passed (on firefox)."
         else
             echo "$line"
