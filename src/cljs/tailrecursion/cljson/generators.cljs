@@ -1,4 +1,4 @@
-(ns generators
+(ns tailrecursion.cljson.generators
   (:refer-clojure :exclude [rand-nth int char list vec set hash-map name symbol keyword shuffle]))
 
 (.call (aget js/Math "seedrandom") js/Math "42")

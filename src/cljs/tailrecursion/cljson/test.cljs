@@ -1,19 +1,21 @@
-(ns cljson-test
+(ns tailrecursion.cljson.test
   (:require [tailrecursion.cljson :refer [clj->cljson cljson->clj]]
-            [generators :as g]
+            [tailrecursion.cljson.generators :as g]
             [cljs.reader :as reader]))
 
 (defn setup! []
   (set! cljs.core/*print-fn*
         (if (undefined? (aget js/window "dump"))
           ;; phantomjs
-          #(.apply (.-log js/console)
-                   (.-console js/window)
-                   (apply array %&))
+          (fn [& args]
+            (.apply (.-log js/console)
+                    (.-console js/window)
+                    (apply array args)))
           ;; firefox
-          #(.apply (aget js/window "dump")
-                   js/window
-                   (apply array %&)))))
+          (fn [& args]
+            (.apply (aget js/window "dump")
+                    js/window
+                    (apply array args))))))
 
 (def scalars [(constantly nil)
               g/number
@@ -52,23 +54,23 @@
 
 (defn deep-collection
   ([breadth depth]
-   (let [s (atom 0)
-         c (atom 0)
-         v (deep-collection breadth depth 0 s c)]
-     (with-meta v {:collections @c :scalars @s})))
+     (let [s (atom 0)
+           c (atom 0)
+           v (deep-collection breadth depth 0 s c)]
+       (with-meta v {:collections @c :scalars @s})))
   ([breadth depth nparents nscalars ncollections] 
-   (let [base  (g/rand-nth [{} [] #{} ()])
-         pcoll (/ (- depth nparents) depth)
-         pscal (- 1 pcoll)
-         ncoll (if (pos? pcoll) (g/geometric (/ 1 (* pcoll breadth))) 0) 
-         nscal (if (pos? pscal) (g/geometric (/ 1 (* pscal breadth))) 0)
-         colls (for [_ (range ncoll)]
-                 (deep-collection breadth depth (inc nparents) nscalars ncollections))
-         scals (for [_ (range nscal)] (if (map? base) (map-scalar) (scalar)))
-         items (g/shuffle (concat colls scals))]
-     (swap! nscalars + nscal)
-     (swap! ncollections + ncoll)
-     (into base (if (map? base) (map (partial apply vector) (partition 2 items)) items)))))
+     (let [base  (g/rand-nth [{} [] #{} ()])
+           pcoll (/ (- depth nparents) depth)
+           pscal (- 1 pcoll)
+           ncoll (if (pos? pcoll) (g/geometric (/ 1 (* pcoll breadth))) 0) 
+           nscal (if (pos? pscal) (g/geometric (/ 1 (* pscal breadth))) 0)
+           colls (for [_ (range ncoll)]
+                   (deep-collection breadth depth (inc nparents) nscalars ncollections))
+           scals (for [_ (range nscal)] (if (map? base) (map-scalar) (scalar)))
+           items (g/shuffle (concat colls scals))]
+       (swap! nscalars + nscal)
+       (swap! ncollections + ncoll)
+       (into base (if (map? base) (map (partial apply vector) (partition 2 items)) items)))))
 
 (def ^:dynamic *magic* 1)
 
@@ -92,7 +94,7 @@
       (when-not (= x z) (throw (err x y z)))))
 
   (defrecord Person [name])
-  (swap! reader/*tag-table* assoc "cljson-test.Person" map->Person)
+  (swap! reader/*tag-table* assoc "tailrecursion.cljson.test.Person" map->Person)
 
   (let [x (Person. "Bob")
         y (clj->cljson x)
