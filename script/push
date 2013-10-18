@@ -5,7 +5,7 @@ set -e
 VERSION=${1:?}
 MESSAGE=${2:?}
 
-v=$(cat project.clj |awk '{print $3}' |sed 's/"//g')
+v=$(cat project.clj |head -1 |awk '{print $3}' |sed 's/"//g')
 
 if [ "$VERSION" == "$v" ]; then
   git tag -a -m "$MESSAGE" "$VERSION"
