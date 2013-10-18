@@ -11,12 +11,10 @@ tagged literals and metadata.
 
 Artifacts are published on [Clojars](http://clojars.org/tailrecursion/cljson).
 
-Leiningen:
 ```clojure
 [tailrecursion/cljson "1.0.4"]
 ```
 
-Maven:
 ```xml
 <dependency>
   <groupId>tailrecursion</groupId>
