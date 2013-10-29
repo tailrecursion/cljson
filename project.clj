@@ -8,7 +8,7 @@
   :repl-options {:init-ns tailrecursion.cljson}
   :plugins [[lein-cljsbuild "0.3.4"]]
   :profiles {:testz {:dependencies [[org.clojure/clojurescript "0.0-1934"]]}
-             :deployz {:source-paths ["src/cljs"]}
+             :deployz {:source-paths ["src/clj" "src/cljs"]}
              :test {:dependencies [[org.clojure/clojure "1.5.1"]
                                    [org.clojure/data.generators "0.1.2"]
                                    [org.clojure/tools.reader "0.7.9"]]}}
