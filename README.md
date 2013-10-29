@@ -12,14 +12,14 @@ tagged literals and metadata.
 Artifacts are published on [Clojars](http://clojars.org/tailrecursion/cljson).
 
 ```clojure
-[tailrecursion/cljson "1.0.5"]
+[tailrecursion/cljson "1.0.6"]
 ```
 
 ```xml
 <dependency>
   <groupId>tailrecursion</groupId>
   <artifactId>cljson</artifactId>
-  <version>1.0.5</version>
+  <version>1.0.6</version>
 </dependency>
 ```
 

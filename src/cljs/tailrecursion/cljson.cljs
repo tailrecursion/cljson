@@ -61,7 +61,7 @@
           (and (map? x) (not (satisfies? cljs.core/IRecord x)))
           (enc-coll "m" (map encode (apply concat x)))
           (set? x) (enc-coll "s" (map encode x))
-          (or (string? x) (number? x) (nil? x)) x
+          (or (string? x) (number? x) (nil? x) (= true x) (= false x)) x
           :else (or (interpret x)
                     (throw (js/Error. (str "No cljson encoding for type '" (type x) "'.")))))))
 

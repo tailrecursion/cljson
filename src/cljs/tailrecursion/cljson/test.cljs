@@ -106,6 +106,11 @@
         z (cljson->clj y)]
     (when-not (= x z) (throw (err x y z))))
 
+  (let [x [true false "true" 1.22 100 -1 nil]
+        y (clj->cljson x)
+        z (cljson->clj y)]
+    (when-not (= x z) (throw (err x y z))))
+
   (let [x (with-meta {:x 1} {:abc 123})
         y (binding [*print-meta* true] (clj->cljson x))
         z (cljson->clj y)]
