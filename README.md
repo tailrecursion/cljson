@@ -1,32 +1,22 @@
 # cljson
 
-Use cljson to send data between Clojure and ClojureScript applications using JSON
-as the data transfer format. The cljson library has implementations for Clojure and
-ClojureScript and supports all the data types that ClojureScript supports, including
-tagged literals and metadata.
+Use cljson to send data between Clojure and ClojureScript applications using
+JSON as the data transfer format. The cljson library has implementations for
+Clojure and ClojureScript and supports all the data types that ClojureScript
+supports, including tagged literals and metadata.
 
-<img src="https://docs.google.com/a/thefreshdiet.com/spreadsheet/oimg?key=0AveuiOwXIG2PdEFRYXo0RV9YTjIwa1lPaDVNSzU1M1E&oid=5&zx=4oukjhd76v9a" />
+![perf chart][2]
 
-## Install [![Build Status](https://travis-ci.org/tailrecursion/cljson.png?branch=master)](https://travis-ci.org/tailrecursion/cljson)
+## Install [![Build Status][1]][3]
 
-Artifacts are published on [Clojars](http://clojars.org/tailrecursion/cljson).
+Artifacts are published on [Clojars][4].
 
-```clojure
-[tailrecursion/cljson "1.0.6"]
-```
-
-```xml
-<dependency>
-  <groupId>tailrecursion</groupId>
-  <artifactId>cljson</artifactId>
-  <version>1.0.6</version>
-</dependency>
-```
+![latest version][5]
 
 ## Usage
 
-There are two functions exported by this library: `clj->cljson` and `cljson->clj`.
-They convert Clojure data to and from JSON strings.
+There are two functions exported by this library: `clj->cljson` and
+`cljson->clj`.  They convert Clojure data to and from JSON strings.
 
 ```clojure
 user=> (require '[tailrecursion.cljson :refer [clj->cljson cljson->clj]])
@@ -61,15 +51,16 @@ user> (binding [*data-readers* {'user.Person map->Person}] (cljson->clj "[\"user
 ### Tagged Literals
 
 Cljson provides the `EncodeTagged` protocol which can be extended to user types
-and records. This protocol is used to transform a Clojure/ClojureScript thing into
-JSON-ready data.
+and records. This protocol is used to transform a Clojure/ClojureScript thing
+into JSON-ready data.
 
-If a type does not satisfy this protocol then cljson will use the core printer to
-obtain a printed representation of the thing. If the printed representation is a
-tagged literal then the data part is reread and converted to JSON-ready data.
+If a type does not satisfy this protocol then cljson will use the core printer
+to obtain a printed representation of the thing. If the printed representation
+is a tagged literal then the data part is reread and converted to JSON-ready
+data.
 
-Reading of tagged literals is done via the normal tagged literal mechanisms built
-into Clojure and ClojureScript.
+Reading of tagged literals is done via the normal tagged literal mechanisms
+built into Clojure and ClojureScript.
 
 Have a look at _cljson.clj_ and _cljson.cljs_ to see examples of this.
 
@@ -82,3 +73,9 @@ Bind `*print-meta*` to `true` to have metadata included in the JSON output.
 Copyright © 2013 Alan Dipert and Micha Niskin
 
 Distributed under the Eclipse Public License, the same as Clojure.
+
+[1]: https://travis-ci.org/tailrecursion/cljson.png?branch=master
+[2]: https://docs.google.com/a/thefreshdiet.com/spreadsheet/oimg?key=0AveuiOwXIG2PdEFRYXo0RV9YTjIwa1lPaDVNSzU1M1E&oid=5&zx=4oukjhd76v9a
+[3]: https://travis-ci.org/tailrecursion/cljson
+[4]: http://clojars.org/tailrecursion/cljson
+[5]: http://clojars.org/tailrecursion/cljson/latest-version.svg
