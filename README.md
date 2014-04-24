@@ -68,6 +68,20 @@ Have a look at _cljson.clj_ and _cljson.cljs_ to see examples of this.
 
 Bind `*print-meta*` to `true` to have metadata included in the JSON output.
 
+### ClojureScript and Records
+
+Unlike `clojure.core`, ClojureScript lacks a `*data-readers*` dynamic var. Instead, use [cljs.reader](https://github.com/clojure/clojurescript/blob/master/src/cljs/cljs/reader.cljs)'s `register-tag-parser!` function to declare constructors for records and types:
+
+```clojure
+(ns example
+  (:require [tailrecursion.cljson :refer [clj->cljson cljson->clj]]
+            [cljs.reader          :refer [register-tag-parser!]]))
+
+(defrecord Person [name])
+(register-tag-parser! "example.Person" map->Person)
+(print (cljson->clj (clj->cljson (Person. "Bob")))) ;=> #example.Person{:name Bob} 
+```
+
 ## License
 
 Copyright © 2013 Alan Dipert and Micha Niskin
