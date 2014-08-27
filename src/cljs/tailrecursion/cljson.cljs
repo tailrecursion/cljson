@@ -1,7 +1,6 @@
 (ns tailrecursion.cljson
   (:require-macros [tailrecursion.cljson :refer [extends-protocol]])
   (:require [cljs.reader :as reader :refer [*tag-table* *default-data-reader-fn*]]
-            [goog.date.DateTime :as date]
             [clojure.string :refer [split]]))
 
 (declare encode decode)
