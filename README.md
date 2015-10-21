@@ -1,3 +1,9 @@
+# DEPRECATED
+
+As of 10/20/2015, this library is in maintenance mode.  We will continue to review pull requests for bug fixes, but for new projects, consider using [transit-cljs](https://github.com/cognitect/transit-cljs) instead.  While built on the same idea of using JSON as the transport format, it is probably more efficient and supports interchange between a multitude of platforms beyond Clojure and ClojureScript.
+
+We have using Transit for the past few months ourselves in [Hoplon](http://hoplon.io) and it has been a good experience so far.
+
 # cljson
 
 Use cljson to send data between Clojure and ClojureScript applications using
